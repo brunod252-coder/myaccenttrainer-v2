@@ -1,22 +1,23 @@
+import type { Metadata } from "next";
+
+import AuthShell from "@/components/auth/AuthShell";
 import LoginForm from "@/components/auth/LoginForm";
-import MarketingLayout from "@/components/layouts/MarketingLayout";
-import PageBanner from "@/components/marketing/PageBanner";
-import Container from "@/components/ui/Container";
-import Section from "@/components/ui/Section";
+
+export const metadata: Metadata = {
+  title: "Log in",
+  description: "Log in to continue your practice with Nina.",
+};
 
 export default function LoginPage() {
   return (
-    <MarketingLayout>
-      <PageBanner
-        title="Login"
-        subtitle="Access your My Accent Trainer account."
-      />
-
-      <Section>
-        <Container>
-          <LoginForm />
-        </Container>
-      </Section>
-    </MarketingLayout>
+    <AuthShell
+      heading="Welcome back"
+      sub="Log in to continue your practice with Nina."
+      altText="New to MyAccentTrainer?"
+      altHref="/register"
+      altLabel="Create an account"
+    >
+      <LoginForm />
+    </AuthShell>
   );
 }

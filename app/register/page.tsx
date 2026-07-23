@@ -1,22 +1,23 @@
+import type { Metadata } from "next";
+
+import AuthShell from "@/components/auth/AuthShell";
 import RegisterForm from "@/components/auth/RegisterForm";
-import MarketingLayout from "@/components/layouts/MarketingLayout";
-import PageBanner from "@/components/marketing/PageBanner";
-import Container from "@/components/ui/Container";
-import Section from "@/components/ui/Section";
+
+export const metadata: Metadata = {
+  title: "Create your account",
+  description: "Start your journey to clearer, more confident English.",
+};
 
 export default function RegisterPage() {
   return (
-    <MarketingLayout>
-      <PageBanner
-        title="Create Account"
-        subtitle="Start your My Accent Trainer learning journey."
-      />
-
-      <Section>
-        <Container>
-          <RegisterForm />
-        </Container>
-      </Section>
-    </MarketingLayout>
+    <AuthShell
+      heading="Create your account"
+      sub="Start your journey to clearer, more confident English."
+      altText="Already have an account?"
+      altHref="/login"
+      altLabel="Log in"
+    >
+      <RegisterForm />
+    </AuthShell>
   );
 }

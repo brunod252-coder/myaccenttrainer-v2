@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "prisma db push"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
@@ -14,6 +15,7 @@
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.11.1",
     "jsonwebtoken": "^9.0.3",
+    "microsoft-cognitiveservices-speech-sdk": "^1.51.0",
     "next": "16.2.9",
     "prisma": "^7.8.0",
     "react": "19.2.4",

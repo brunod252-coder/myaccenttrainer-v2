@@ -11,6 +11,10 @@ export interface LessonSection {
   description: string;
   buttonLabel?: string;
   audioUrl?: string;
+  // The phrase the learner records in a "practice" step, and the lesson's
+  // focus sound (e.g. "r") — used for real pronunciation scoring + Nina's tip.
+  referenceText?: string;
+  focus?: string;
 }
 
 export interface Lesson {

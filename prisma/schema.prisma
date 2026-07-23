@@ -19,6 +19,20 @@ model User {
   enrollments  Enrollment[]
   progress     LessonProgress[]
   referralsSent ReferralInvite[] @relation("ReferralInviter")
+  attempts     PronunciationAttempt[]
+  bookmarks    LessonBookmark[]
+  recordings   VoiceRecording[]
+  authTokens   VerificationToken[]
+  coachingGoal CoachingGoal?
+
+  emailVerified        Boolean  @default(false)
+  emailVerifiedAt      DateTime?
+  referralCode         String?  @unique
+
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String?
+  planRenewsAt         DateTime?
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -153,6 +167,124 @@ model ReferralInvite {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model CustomLesson {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String   @default("Lesson")
+  subtitle      String
+  description   String
+  focus         String   @default("r")
+  referenceText String
+  difficulty    String   @default("Beginner")
+  estimatedMinutes Int   @default(5)
+  audioBase64   String?
+  audioMime     String?
+  published     Boolean  @default(true)
+  sortOrder     Int      @default(100)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NewsPost {
+  id        String   @id @default(cuid())
+  title     String
+  excerpt   String
+  dateLabel String   @default("")
+  published Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model CoachingGoal {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  weeklyTarget  Int      @default(4)   // practice days per week
+  clarityTarget Int?                    // optional clarity goal (0..100)
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  type      String   // "reset" | "verify"
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model VoiceRecording {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonSlug String?
+  focus      String?
+  overall    Int?
+  mimeType   String   @default("audio/wav")
+  audioBase64 String  // the recording bytes, base64-encoded (short clips)
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LessonBookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonSlug String
+  kind       String   @default("favorite") // "favorite" | "bookmark"
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, lessonSlug, kind])
+  @@index([userId])
+}
+
+model PronunciationAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  lessonSlug    String?
+  referenceText String?
+  focus         String?
+  overall       Int
+  rhythm        Int
+  source        String   @default("practice-estimate")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum UserRole {

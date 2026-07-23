@@ -7,14 +7,12 @@ const testimonials = [
   {
     name: "Maria",
     country: "Brazil",
-    quote:
-      "The lessons made English pronunciation much easier to understand.",
+    quote: "The lessons made English pronunciation much easier to understand.",
   },
   {
     name: "Ahmed",
     country: "Egypt",
-    quote:
-      "I finally feel confident speaking English at work.",
+    quote: "I finally feel confident speaking English at work.",
   },
   {
     name: "Samuel",
@@ -24,13 +22,20 @@ const testimonials = [
   },
 ];
 
+const stats = [
+  { value: "10,000+", label: "learners" },
+  { value: "120+", label: "countries" },
+  { value: "4.9/5", label: "average rating" },
+];
+
 export default function Testimonials() {
   return (
     <Section className="pt-0">
       <Container>
         <SectionHeader
-          title="What Our Students Say"
-          subtitle="Students from around the world have improved their confidence through My Accent Trainer."
+          eyebrow="Loved worldwide"
+          title="What our students say"
+          subtitle="Students from around the world have improved their confidence through MyAccentTrainer."
         />
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -41,6 +46,15 @@ export default function Testimonials() {
               country={testimonial.country}
               quote={testimonial.quote}
             />
+          ))}
+        </div>
+
+        <div className="mt-10 grid gap-6 rounded-2xl border border-gray-100 bg-[#f6faf8] p-8 text-center sm:grid-cols-3">
+          {stats.map((stat) => (
+            <div key={stat.label}>
+              <p className="font-display text-3xl text-[#20ad68]">{stat.value}</p>
+              <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
+            </div>
           ))}
         </div>
       </Container>

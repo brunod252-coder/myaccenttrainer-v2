@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
+/* ── Brand + design tokens ─────────────────────────────────────────────
+   Keeps the myACCENTtrainer green, with the demo's refined neutrals,
+   typography, and depth. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand: #20ad68;
+  --brand-dark: #169357;
+  --brand-deep: #168c56;
+  --brand-050: #e9f8f3;
+  --brand-100: #d7f2e7;
+  --navy: #17223b;
+  --slate: #52719f;
+  --deep: #142b4c;
+  --surface: #f6faf8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+  --color-background: #ffffff;
+  --color-foreground: var(--navy);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #ffffff;
+  color: var(--navy);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Elegant display headings (Fraunces) */
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  letter-spacing: -0.01em;
 }

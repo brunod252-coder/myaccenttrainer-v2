@@ -11,11 +11,11 @@ const navigation = [
 
 export default function Header() {
   return (
-    <header className="border-b border-gray-100 bg-white">
+    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/80 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="text-lg font-bold">
+        <Link href="/" className="text-lg font-bold tracking-tight">
           <span className="text-[#20ad68]">my</span>
-          <span className="mx-1 rounded bg-[#20ad68] px-1 text-white">
+          <span className="mx-1 rounded-md bg-[#20ad68] px-1.5 text-white">
             ACCENT
           </span>
           <span className="text-[#52719f]">trainer</span>
@@ -26,19 +26,27 @@ export default function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm text-gray-700 transition hover:text-[#20ad68]"
+              className="text-sm font-medium text-gray-600 transition hover:text-[#20ad68]"
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <Link
-          href="/login"
-          className="rounded bg-[#20ad68] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#169357]"
-        >
-          Login
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="hidden text-sm font-semibold text-[#52719f] transition hover:text-[#20ad68] sm:block"
+          >
+            Login
+          </Link>
+          <Link
+            href="/register"
+            className="rounded-lg bg-[#20ad68] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357]"
+          >
+            Start free
+          </Link>
+        </div>
       </div>
     </header>
   );

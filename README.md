@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MyAccentTrainer
 
-## Getting Started
+An AI communication platform that helps people speak English more clearly and
+confidently — without losing their own voice. Learners practice pronunciation
+with **Nina**, a patient AI coach who listens, scores, and gives encouraging,
+sound-by-sound feedback.
 
-First, run the development server:
+Built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**,
+**Tailwind CSS v4**, and **Prisma 7** (SQLite in development).
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma db push          # create the database schema
+npm run dev                 # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then, with the dev server running, load the starter lessons once (development
+only): open `http://localhost:3000/api/dev/seed`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Register an account at `/register` and open `/dashboard`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Full activation steps (real scoring, payments, production notes) are in
+[`docs/SETUP.md`](docs/SETUP.md).
 
-## Learn More
+## What's inside
 
-To learn more about Next.js, take a look at the following resources:
+- **Marketing site** — landing, about, courses, prices, news, FAQs.
+- **Accounts** — email/password auth with JWT sessions (`mat_session` cookie).
+- **Dashboard** — clarity, streak, lessons, and course progress from real data.
+- **Practice with Nina** — record your voice, get a real pronunciation score,
+  a sound-by-sound breakdown, and a coaching tip. Five lessons to start.
+- **Progress, Wallet, Referrals, Settings** — wired to the database.
+- **Payments** — Stripe Checkout + subscription webhook (keyless-safe until you
+  add keys).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+  (marketing)        page.tsx, about, courses, prices, news, faqs
+  login, register    split-screen auth
+  dashboard/         dashboard, practice, lesson/[id], courses, progress,
+                     wallet, referrals, settings
+  api/               auth, pronunciation/score, lessons/complete,
+                     checkout, stripe/webhook, dev/seed
+components/          site, home, cards, layouts, auth, app, lesson, ui
+lib/
+  jwt, password, prisma
+  lessons/           static lesson content + helpers
+  pronunciation/     recorder, mock scorer, Azure scorer, attempts
+  payments/          subscription helpers
+prisma/              schema.prisma + migrations
+docs/                SETUP, PRONUNCIATION, PAYMENTS, NINA
+```
 
-## Deploy on Vercel
+## Configuration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copy `.env.example` to `.env` and fill in what you need. Nothing is required to
+run in development; each key unlocks a feature:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `JWT_SECRET` — set a strong value before production.
+- `AZURE_SPEECH_KEY` / `AZURE_SPEECH_REGION` — real pronunciation scoring
+  (see [`docs/PRONUNCIATION.md`](docs/PRONUNCIATION.md)).
+- `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID` / `STRIPE_WEBHOOK_SECRET` /
+  `NEXT_PUBLIC_APP_URL` — payments (see [`docs/PAYMENTS.md`](docs/PAYMENTS.md)).
+
+## Notes
+
+- SQLite is used for development; switch the Prisma datasource to Postgres for
+  production.
+- Nina's voice and teaching philosophy live in [`docs/NINA.md`](docs/NINA.md).

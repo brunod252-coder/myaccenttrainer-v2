@@ -1,43 +1,29 @@
+import type { Metadata } from "next";
+
 import MarketingLayout from "@/components/layouts/MarketingLayout";
 import PageBanner from "@/components/marketing/PageBanner";
 import Container from "@/components/ui/Container";
 import Section from "@/components/ui/Section";
+import { getNews } from "@/lib/content/content";
 
-const posts = [
-  {
-    title: "Welcome to My Accent Trainer Version 2",
-    excerpt:
-      "A modern foundation is being built to preserve Nina's lessons while making the platform easier to use and maintain.",
-    date: "June 29, 2026",
-  },
-  {
-    title: "Clear English Starts With Sound",
-    excerpt:
-      "The Basic Lessons help students understand the sounds that shape clear spoken English.",
-    date: "Coming Soon",
-  },
-];
+export const metadata: Metadata = {
+  title: "News",
+  description: "Announcements and learning notes from MyAccentTrainer.",
+};
 
-export default function NewsPage() {
+export default async function NewsPage() {
+  const posts = await getNews();
   return (
     <MarketingLayout>
-      <PageBanner
-        title="News"
-        subtitle="Updates, announcements, and learning notes from My Accent Trainer."
-      />
-
+      <PageBanner eyebrow="News" title="Updates from MyAccentTrainer" subtitle="Announcements and learning notes as the platform grows." />
       <Section>
         <Container>
           <div className="mx-auto grid max-w-4xl gap-6">
             {posts.map((post) => (
-              <article key={post.title} className="border bg-white p-6 shadow-sm">
-                <p className="text-xs font-semibold text-gray-500">{post.date}</p>
-                <h2 className="mt-2 text-xl font-bold text-[#20ad68]">
-                  {post.title}
-                </h2>
-                <p className="mt-3 text-sm leading-6 text-gray-700">
-                  {post.excerpt}
-                </p>
+              <article key={post.id} className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                <span className="inline-block rounded-full bg-[#e9f1f6] px-3 py-1 text-xs font-semibold text-[#52719f]">{post.dateLabel || "Update"}</span>
+                <h2 className="mt-3 font-display text-xl text-[#17223b]">{post.title}</h2>
+                <p className="mt-2 text-sm leading-7 text-gray-600">{post.excerpt}</p>
               </article>
             ))}
           </div>

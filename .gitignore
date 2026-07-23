@@ -41,3 +41,16 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# local SQLite database
+/dev.db
+/dev.db-journal
+*.db-wal
+*.db-shm
+
+# temporary rebuild material
+/_backup_pre_rebuild/
+/_to_delete/
+
+# generated local files
+/tsconfig.tsbuildinfo
