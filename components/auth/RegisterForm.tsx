@@ -22,6 +22,8 @@ export default function RegisterForm() {
 
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
+    // The referral code originates from the browser URL after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (r) setReferralCode(r);
   }, []);
 
@@ -157,3 +159,4 @@ function Field({
     </label>
   );
 }
+

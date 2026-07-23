@@ -66,7 +66,7 @@ export default async function BillingPage() {
           ) : (
             <div className="mt-4">
               <p className="text-sm text-gray-600">
-                You're on the free assessment. Choose a plan to unlock every lesson and unlimited coaching.
+                You&apos;re on the free assessment. Choose a plan to unlock every lesson and unlimited coaching.
               </p>
               <Link
                 href="/dashboard/wallet"
@@ -104,3 +104,4 @@ export default async function BillingPage() {
     </AppLayout>
   );
 }
+

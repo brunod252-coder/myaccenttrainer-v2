@@ -70,7 +70,7 @@ export default async function AdminUserDetail({ params }: { params: Promise<{ id
       {recordings.length > 0 && (
         <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <h2 className="font-display text-lg text-[#17223b]">Recent recordings</h2>
-          <p className="mt-1 text-sm text-gray-500">Listen to this learner's latest takes.</p>
+          <p className="mt-1 text-sm text-gray-500">Listen to this learner&apos;s latest takes.</p>
           <div className="mt-4 space-y-3">
             {recordings.map((r) => (
               <div key={r.id} className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-100 bg-[#f8fbfa] p-4">
@@ -81,7 +81,6 @@ export default async function AdminUserDetail({ params }: { params: Promise<{ id
                 {typeof r.overall === "number" && (
                   <span className="rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">{r.overall}%</span>
                 )}
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <audio controls preload="none" src={`/api/admin/recordings/${r.id}`} className="h-9 flex-1 min-w-[220px]" />
               </div>
             ))}
@@ -101,3 +100,4 @@ function Item({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+

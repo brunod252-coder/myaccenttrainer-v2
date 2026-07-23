@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
-import { Sparkle, Flame, CheckCircle, Chart, Mic, Arrow } from "@/components/ui/icons";
+import { Sparkle, CheckCircle, Chart, Mic } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { getNinaBrain } from "@/lib/nina/brain";
@@ -219,8 +219,7 @@ export default async function NinaPage() {
                     {typeof r.overall === "number" && (
                       <span className="rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">{r.overall}% clarity</span>
                     )}
-                    {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                    <audio controls preload="none" src={`/api/recordings/${r.id}`} className="h-9 flex-1 min-w-[220px]" />
+                        <audio controls preload="none" src={`/api/recordings/${r.id}`} className="h-9 flex-1 min-w-[220px]" />
                   </div>
                 ))}
               </div>
@@ -268,3 +267,4 @@ function InsightCard({ title, emoji, value, detail }: { title: string; emoji: st
     </div>
   );
 }
+
