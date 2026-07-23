@@ -1,0 +1,94 @@
+{
+  "id": "lesson-the-american-th",
+  "slug": "the-american-th",
+  "title": "The American TH",
+  "subtitle": "Voiced and Unvoiced TH",
+  "description": "Master the TH sounds used in everyday American English.",
+  "course": "Nina Studio",
+  "difficulty": "Beginner",
+  "estimatedMinutes": 15,
+  "status": "published",
+  "publishedAt": "2026-07-05T05:18:33.109Z",
+  "words": [
+    {
+      "word": "think",
+      "audio": {
+        "normal": "/audio/pronunciation/think-normal.mp3",
+        "slow": "/audio/pronunciation/think-slow.mp3",
+        "slower": "/audio/pronunciation/think-slower.mp3"
+      }
+    },
+    {
+      "word": "three",
+      "audio": {
+        "normal": "/audio/pronunciation/three-normal.mp3",
+        "slow": "/audio/pronunciation/three-slow.mp3",
+        "slower": "/audio/pronunciation/three-slower.mp3"
+      }
+    },
+    {
+      "word": "through",
+      "audio": {
+        "normal": "/audio/pronunciation/through-normal.mp3",
+        "slow": "/audio/pronunciation/through-slow.mp3",
+        "slower": "/audio/pronunciation/through-slower.mp3"
+      }
+    },
+    {
+      "word": "bath",
+      "audio": {
+        "normal": "/audio/pronunciation/bath-normal.mp3",
+        "slow": "/audio/pronunciation/bath-slow.mp3",
+        "slower": "/audio/pronunciation/bath-slower.mp3"
+      }
+    },
+    {
+      "word": "bathe",
+      "audio": {
+        "normal": "/audio/pronunciation/bathe-normal.mp3",
+        "slow": "/audio/pronunciation/bathe-slow.mp3",
+        "slower": "/audio/pronunciation/bathe-slower.mp3"
+      }
+    },
+    {
+      "word": "breathe",
+      "audio": {
+        "normal": "/audio/pronunciation/breathe-normal.mp3",
+        "slow": "/audio/pronunciation/breathe-slow.mp3",
+        "slower": "/audio/pronunciation/breathe-slower.mp3"
+      }
+    },
+    {
+      "word": "brother",
+      "audio": {
+        "normal": "/audio/pronunciation/brother-normal.mp3",
+        "slow": "/audio/pronunciation/brother-slow.mp3",
+        "slower": "/audio/pronunciation/brother-slower.mp3"
+      }
+    },
+    {
+      "word": "mother",
+      "audio": {
+        "normal": "/audio/pronunciation/mother-normal.mp3",
+        "slow": "/audio/pronunciation/mother-slow.mp3",
+        "slower": "/audio/pronunciation/mother-slower.mp3"
+      }
+    },
+    {
+      "word": "there",
+      "audio": {
+        "normal": "/audio/pronunciation/there-normal.mp3",
+        "slow": "/audio/pronunciation/there-slow.mp3",
+        "slower": "/audio/pronunciation/there-slower.mp3"
+      }
+    },
+    {
+      "word": "those",
+      "audio": {
+        "normal": "/audio/pronunciation/those-normal.mp3",
+        "slow": "/audio/pronunciation/those-slow.mp3",
+        "slower": "/audio/pronunciation/those-slower.mp3"
+      }
+    }
+  ]
+}

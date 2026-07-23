@@ -13,6 +13,7 @@ export const lessons: Lesson[] = [
     estimatedMinutes: 12,
 
     sections: [
+
       {
         id: "listen",
         type: "listen",
@@ -20,8 +21,13 @@ export const lessons: Lesson[] = [
         description:
           "Listen carefully to Nina's model pronunciation before practicing.",
         buttonLabel: "Play Native Speaker",
-        audioUrl: "/audio/american-r-native.mp3",
+        audio: {
+          normal: "/audio/pronunciation/american-r-normal.mp3",
+          slow: "/audio/pronunciation/american-r-slow.mp3",
+          slower: "/audio/pronunciation/american-r-slower.mp3",
+        },
       },
+
       {
         id: "practice",
         type: "practice",

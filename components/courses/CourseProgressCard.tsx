@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type CourseProgressCardProps = {
   title: string;
   description: string;
@@ -13,18 +15,14 @@ export default function CourseProgressCard({
 }: CourseProgressCardProps) {
   return (
     <article className="rounded border bg-white shadow-sm transition hover:shadow-md">
-      <div className="h-40 bg-[#eef6f3] flex items-center justify-center text-5xl">
+      <div className="flex h-40 items-center justify-center bg-[#eef6f3] text-5xl">
         📘
       </div>
 
       <div className="p-6">
-        <h3 className="text-xl font-bold text-[#20ad68]">
-          {title}
-        </h3>
+        <h3 className="text-xl font-bold text-[#20ad68]">{title}</h3>
 
-        <p className="mt-3 text-sm leading-6 text-gray-600">
-          {description}
-        </p>
+        <p className="mt-3 text-sm leading-6 text-gray-600">{description}</p>
 
         <div className="mt-6">
           <div className="flex justify-between text-sm font-semibold">
@@ -40,9 +38,12 @@ export default function CourseProgressCard({
           </div>
         </div>
 
-        <button className="mt-8 w-full rounded bg-[#20ad68] py-3 font-semibold text-white transition hover:bg-[#169357]">
+        <Link
+          href="/dashboard/lesson/american-r"
+          className="mt-8 flex w-full items-center justify-center rounded bg-[#20ad68] py-3 font-semibold text-white transition hover:bg-[#169357]"
+        >
           Continue Learning
-        </button>
+        </Link>
       </div>
     </article>
   );

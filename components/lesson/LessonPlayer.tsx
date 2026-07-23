@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import LessonSectionRenderer from "@/components/lesson/LessonSectionRenderer";
 import LessonStepper from "@/components/lesson/LessonStepper";
@@ -12,6 +12,7 @@ type LessonPlayerProps = {
 
 export default function LessonPlayer({ lesson }: LessonPlayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const activeSectionRef = useRef<HTMLDivElement | null>(null);
 
   const currentSection = lesson.sections[currentIndex];
 
@@ -20,6 +21,13 @@ export default function LessonPlayer({ lesson }: LessonPlayerProps) {
       setCurrentIndex((index) => index + 1);
     }
   }
+
+  useEffect(() => {
+    activeSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, [currentIndex]);
 
   return (
     <div className="space-y-8">
@@ -36,10 +44,10 @@ export default function LessonPlayer({ lesson }: LessonPlayerProps) {
 
           if (isActive) {
             return (
-              <div key={section.id}>
+              <div key={section.id} ref={activeSectionRef}>
                 <LessonSectionRenderer
                   section={section}
-                  onSectionComplete={advanceLesson}
+                  onComplete={advanceLesson}
                 />
               </div>
             );
@@ -89,3 +97,4 @@ function LessonSectionPreview({
     </div>
   );
 }
+

@@ -1,22 +1,22 @@
 import LessonAudioPlayer from "./LessonAudioPlayer";
 
+import type { LessonAudioSet } from "@/lib/lessons";
+
 type AudioPracticeCardProps = {
   title: string;
   description: string;
   buttonLabel: string;
-  audioUrl?: string;
-  onPrimaryAction?: () => void;
-  onAudioEnded?: () => void;
+  audio?: LessonAudioSet;
+  onComplete?: () => void;
 };
+
 export default function AudioPracticeCard({
   title,
   description,
   buttonLabel,
-  audioUrl,
-  onPrimaryAction,
-  onAudioEnded,
+  audio,
+  onComplete,
 }: AudioPracticeCardProps) {
-
   const isListenSection = title.toLowerCase() === "listen";
 
   return (
@@ -28,26 +28,29 @@ export default function AudioPracticeCard({
 
         <div className="flex-1">
           <h2 className="text-xl font-bold text-[#20ad68]">{title}</h2>
+
           <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-600">
             {description}
           </p>
 
           {isListenSection && (
-           <LessonAudioPlayer
-  label="Native Speaker Audio"
-  audioUrl={audioUrl}
-  onEnded={onAudioEnded}
-/>
+            <LessonAudioPlayer
+              label="Native Speaker Audio"
+              audio={audio}
+              onEnded={onComplete}
+            />
           )}
-<button
-  type="button"
-  onClick={onPrimaryAction}
-  className="mt-6 rounded bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#169357]"
->
-  {buttonLabel}
-</button>
+
+          <button
+            type="button"
+            onClick={onComplete}
+            className="mt-6 rounded bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#169357]"
+          >
+            {buttonLabel}
+          </button>
         </div>
       </div>
     </section>
   );
 }
+

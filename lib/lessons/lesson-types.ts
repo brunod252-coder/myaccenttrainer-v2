@@ -4,13 +4,19 @@ export type LessonSectionType =
   | "feedback"
   | "complete";
 
+export type LessonAudioSet = {
+  normal?: string;
+  slow?: string;
+  slower?: string;
+};
+
 export interface LessonSection {
   id: string;
   type: LessonSectionType;
   title: string;
   description: string;
   buttonLabel?: string;
-  audioUrl?: string;
+  audio?: LessonAudioSet;
 }
 
 export interface Lesson {

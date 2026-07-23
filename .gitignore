@@ -41,3 +41,18 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# Runtime learner data — preserve outside Git
+/data/recordings/
+/data/learner-profiles/
+/data/learner-timelines/
+/data/voice-history/
+
+# Temporary editor and recovery files
+*.save
+
+# Local and production SQLite databases
+/dev.db
+/prisma/dev.db
+*.sqlite
+*.sqlite3

@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
- }
+}
 
 model User {
   id           String   @id @default(cuid())
@@ -14,57 +14,72 @@ model User {
   lastName     String?
   role         UserRole @default(STUDENT)
 
-  profile      UserProfile?
-  wallet       WalletAccount?
-  enrollments  Enrollment[]
-  progress     LessonProgress[]
-  referralsSent ReferralInvite[] @relation("ReferralInviter")
+  profile             UserProfile?
+  wallet              WalletAccount?
+  enrollments         Enrollment[]
+  progress            LessonProgress[]
+  referralsSent       ReferralInvite[]     @relation("ReferralInviter")
+  passwordResetTokens PasswordResetToken[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model UserProfile {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  countryOfResidence  String?
-  nativeLanguage      String?
-  alsoSpeaks          String?
-  englishGoal         String?
-  proficiencyLevel    String?
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  countryOfResidence String?
+  nativeLanguage     String?
+  alsoSpeaks         String?
+  englishGoal        String?
+  proficiencyLevel   String?
 
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Course {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
-  slug        String   @unique
+  slug        String  @unique
   description String?
   imageUrl    String?
-  isPublished Boolean  @default(false)
-  sortOrder   Int      @default(0)
+  isPublished Boolean @default(false)
+  sortOrder   Int     @default(0)
 
   modules     Module[]
   enrollments Enrollment[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Module {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   courseId    String
   title       String
   description String?
-  sortOrder   Int      @default(0)
+  sortOrder   Int     @default(0)
 
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  lessons     Lesson[]
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
 }
 
 model Lesson {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   moduleId    String
   title       String
   slug        String
@@ -73,26 +88,26 @@ model Lesson {
   audioUrl    String?
   pdfUrl      String?
   content     String?
-  sortOrder   Int      @default(0)
-  isPublished Boolean  @default(false)
+  sortOrder   Int     @default(0)
+  isPublished Boolean @default(false)
 
-  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  progress    LessonProgress[]
+  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([moduleId, slug])
 }
 
 model Enrollment {
-  id        String   @id @default(cuid())
-  userId    String
-  courseId  String
-  status    EnrollmentStatus @default(ACTIVE)
+  id       String           @id @default(cuid())
+  userId   String
+  courseId String
+  status   EnrollmentStatus @default(ACTIVE)
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -100,34 +115,34 @@ model Enrollment {
 }
 
 model LessonProgress {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   userId      String
   lessonId    String
   status      ProgressStatus @default(NOT_STARTED)
   completedAt DateTime?
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
-  updatedAt   DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, lessonId])
 }
 
 model WalletAccount {
-  id           String   @id @default(cuid())
-  userId       String   @unique
-  currencyCode String   @default("USD")
+  id           String @id @default(cuid())
+  userId       String @unique
+  currencyCode String @default("USD")
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions WalletTransaction[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WalletTransaction {
-  id              String   @id @default(cuid())
+  id              String                @id @default(cuid())
   walletAccountId String
   type            WalletTransactionType
   amountMinor     Int
@@ -136,23 +151,23 @@ model WalletTransaction {
   referenceType   String?
   referenceId     String?
 
-  walletAccount   WalletAccount @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
+  walletAccount WalletAccount @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model ReferralInvite {
-  id             String   @id @default(cuid())
-  inviterUserId  String
-  friendEmail    String
-  friendName     String?
-  referralCode   String
-  status         ReferralStatus @default(SENT)
+  id            String         @id @default(cuid())
+  inviterUserId String
+  friendEmail   String
+  friendName    String?
+  referralCode  String
+  status        ReferralStatus @default(SENT)
 
-  inviter        User     @relation("ReferralInviter", fields: [inviterUserId], references: [id], onDelete: Cascade)
+  inviter User @relation("ReferralInviter", fields: [inviterUserId], references: [id], onDelete: Cascade)
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum UserRole {

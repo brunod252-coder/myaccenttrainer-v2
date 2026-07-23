@@ -6,12 +6,12 @@ import type { LessonSection } from "@/lib/lessons";
 
 type Props = {
   section: LessonSection;
-  onSectionComplete?: () => void;
+  onComplete?: () => void;
 };
 
 export default function LessonSectionRenderer({
   section,
-  onSectionComplete,
+  onComplete,
 }: Props) {
   switch (section.type) {
     case "listen":
@@ -20,9 +20,8 @@ export default function LessonSectionRenderer({
           title={section.title}
           description={section.description}
           buttonLabel={section.buttonLabel || "Continue"}
-          audioUrl={section.audioUrl}
-          onPrimaryAction={onSectionComplete}
-          onAudioEnded={onSectionComplete}
+          audio={section.audio}
+          onComplete={onComplete}
         />
       );
 
@@ -32,8 +31,8 @@ export default function LessonSectionRenderer({
           title={section.title}
           description={section.description}
           buttonLabel={section.buttonLabel || "Continue"}
-          audioUrl={section.audioUrl}
-          onPrimaryAction={onSectionComplete}
+          audio={section.audio}
+          onComplete={onComplete}
         />
       );
 
