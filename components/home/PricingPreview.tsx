@@ -15,7 +15,7 @@ export default function PricingPreview() {
 
         <PricingCard
           title="All-access"
-          price="$29.99"
+          price="$19.99"
           period="/month"
           description="Or $220/year billed annually — cancel anytime."
           features={[

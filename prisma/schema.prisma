@@ -28,6 +28,7 @@ model User {
   emailVerifiedAt DateTime?
   referralCode    String?   @unique
 
+  selectedPlanId       String?
   stripeCustomerId     String?
   stripeSubscriptionId String?
   subscriptionStatus   String?
