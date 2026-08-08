@@ -1,0 +1,334 @@
+import { NextResponse } from "next/server";
+import Stripe from "stripe";
+
+import {
+  findUserByStripeSubscription,
+  setSubscriptionByUserId,
+} from "@/lib/payments/subscription";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function getStripe() {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!secretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured.");
+  }
+
+  return new Stripe(secretKey);
+}
+
+export async function POST(request: Request) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_NOT_CONFIGURED");
+
+    return NextResponse.json(
+      {
+        received: false,
+        error: "Webhook is not configured.",
+      },
+      {
+        status: 503,
+      },
+    );
+  }
+
+  const signature = request.headers.get("stripe-signature");
+
+  if (!signature) {
+    console.error("STRIPE_WEBHOOK_MISSING_SIGNATURE");
+
+    return NextResponse.json(
+      {
+        received: false,
+        error: "Missing Stripe signature.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  /*
+   * Do not call request.json() before verification.
+   * Stripe requires the exact raw body that it signed.
+   */
+  const payload = await request.text();
+
+  let event: Stripe.Event;
+
+  try {
+    event = getStripe().webhooks.constructEvent(
+      payload,
+      signature,
+      webhookSecret,
+    );
+  } catch (error) {
+    console.error("STRIPE_WEBHOOK_INVALID_SIGNATURE", {
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+      payloadLength: payload.length,
+    });
+
+    return NextResponse.json(
+      {
+        received: false,
+        error: "Invalid Stripe signature.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  console.log("STRIPE_WEBHOOK_RECEIVED", {
+    eventId: event.id,
+    type: event.type,
+  });
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session =
+          event.data.object as Stripe.Checkout.Session;
+
+        const userId =
+          session.client_reference_id ||
+          session.metadata?.userId ||
+          "";
+
+        if (!userId) {
+          throw new Error(
+            "Completed Checkout Session has no user ID.",
+          );
+        }
+
+        const customerId =
+          typeof session.customer === "string"
+            ? session.customer
+            : session.customer?.id ?? null;
+
+        const subscriptionId =
+          typeof session.subscription === "string"
+            ? session.subscription
+            : session.subscription?.id ?? null;
+
+        if (!customerId || !subscriptionId) {
+          throw new Error(
+            "Completed Checkout Session is missing Stripe customer or subscription.",
+          );
+        }
+
+        await setSubscriptionByUserId(userId, {
+          subscriptionStatus: "trialing",
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscriptionId,
+        });
+
+        console.log(
+          "STRIPE_CHECKOUT_SESSION_SYNCHRONIZED",
+          {
+            eventId: event.id,
+            userId,
+            customerId,
+            subscriptionId,
+          },
+        );
+
+        break;
+      }
+
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription =
+          event.data.object as Stripe.Subscription;
+
+        const userId =
+          subscription.metadata?.userId ||
+          (await findUserByStripeSubscription(
+            subscription.id,
+          ));
+
+        if (!userId) {
+          console.warn(
+            "STRIPE_SUBSCRIPTION_USER_NOT_FOUND",
+            {
+              eventId: event.id,
+              subscriptionId: subscription.id,
+            },
+          );
+
+          break;
+        }
+
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id;
+
+        await setSubscriptionByUserId(userId, {
+          subscriptionStatus:
+            normalizeSubscriptionStatus(
+              subscription,
+            ),
+          stripeCustomerId: customerId,
+          stripeSubscriptionId: subscription.id,
+          planRenewsAt:
+            getSubscriptionEndDate(subscription),
+        });
+
+        console.log(
+          "STRIPE_SUBSCRIPTION_SYNCHRONIZED",
+          {
+            eventId: event.id,
+            userId,
+            subscriptionId: subscription.id,
+            status: subscription.status,
+          },
+        );
+
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription =
+          event.data.object as Stripe.Subscription;
+
+        const userId =
+          subscription.metadata?.userId ||
+          (await findUserByStripeSubscription(
+            subscription.id,
+          ));
+
+        if (userId) {
+          await setSubscriptionByUserId(userId, {
+            subscriptionStatus: "canceled",
+            planRenewsAt: null,
+          });
+        }
+
+        break;
+      }
+
+      case "invoice.paid": {
+        console.log("STRIPE_INVOICE_PAID", {
+          eventId: event.id,
+        });
+
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice =
+          event.data.object as Stripe.Invoice;
+
+        const subscriptionId =
+          typeof invoice.parent?.subscription_details
+            ?.subscription === "string"
+            ? invoice.parent.subscription_details
+                .subscription
+            : null;
+
+        if (subscriptionId) {
+          const userId =
+            await findUserByStripeSubscription(
+              subscriptionId,
+            );
+
+          if (userId) {
+            await setSubscriptionByUserId(userId, {
+              subscriptionStatus: "past_due",
+            });
+          }
+        }
+
+        break;
+      }
+
+      default:
+        console.log("STRIPE_WEBHOOK_IGNORED", {
+          eventId: event.id,
+          type: event.type,
+        });
+    }
+  } catch (error) {
+    console.error("STRIPE_WEBHOOK_PROCESSING_ERROR", {
+      eventId: event.id,
+      type: event.type,
+      error:
+        error instanceof Error
+          ? error.message
+          : String(error),
+    });
+
+    /*
+     * Return a failure so Stripe retries the event.
+     */
+    return NextResponse.json(
+      {
+        received: false,
+        error: "Webhook processing failed.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+
+  return NextResponse.json({
+    received: true,
+  });
+}
+
+function normalizeSubscriptionStatus(
+  subscription: Stripe.Subscription,
+): string {
+  if (
+    subscription.cancel_at_period_end &&
+    (
+      subscription.status === "trialing" ||
+      subscription.status === "active"
+    )
+  ) {
+    return "cancel_scheduled";
+  }
+
+  return subscription.status;
+}
+
+function getSubscriptionEndDate(
+  subscription: Stripe.Subscription,
+): Date | null {
+  /*
+   * While a subscription is trialing, the meaningful access/billing
+   * boundary is the trial end.
+   *
+   * Once Stripe moves the subscription to active, trial_end may remain
+   * populated as historical data. At that point the meaningful renewal
+   * boundary is the current subscription item's period end.
+   */
+  if (
+    subscription.status === "trialing" &&
+    subscription.trial_end
+  ) {
+    return new Date(
+      subscription.trial_end * 1000,
+    );
+  }
+
+  const firstItem =
+    subscription.items.data[0];
+
+  if (firstItem?.current_period_end) {
+    return new Date(
+      firstItem.current_period_end * 1000,
+    );
+  }
+
+  return null;
+}

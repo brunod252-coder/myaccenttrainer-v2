@@ -327,15 +327,14 @@ enum ReferralStatus {
 }
 
 model Notification {
-  id        String @id @default(cuid())
-  userId    String
-  type      String
-  title     String
-  body      String
-  href      String?
-  metadata  Json?
-  readAt    DateTime?
-  dedupeKey String? @unique
+  id       String @id @default(cuid())
+  userId   String
+  type     String
+  title    String
+  body     String
+  href     String?
+  metadata Json?
+  readAt   DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

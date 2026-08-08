@@ -23,7 +23,6 @@ model User {
   recordings    VoiceRecording[]
   authTokens    VerificationToken[]
   coachingGoal  CoachingGoal?
-  notifications Notification[]
 
   emailVerified   Boolean   @default(false)
   emailVerifiedAt DateTime?
@@ -325,23 +324,3 @@ enum ReferralStatus {
   REWARDED
   CANCELLED
 }
-
-model Notification {
-  id        String @id @default(cuid())
-  userId    String
-  type      String
-  title     String
-  body      String
-  href      String?
-  metadata  Json?
-  readAt    DateTime?
-  dedupeKey String? @unique
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([userId, createdAt])
-  @@index([userId, readAt])
-}
-

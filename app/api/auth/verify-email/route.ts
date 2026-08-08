@@ -23,5 +23,5 @@ export async function GET(req: Request) {
   } catch {
     // field not migrated yet — ignore
   }
-  return NextResponse.redirect(`${appUrl()}/dashboard?verify=success`);
+  return NextResponse.redirect(`${appUrl()}/onboarding/plan?verify=success`);
 }

@@ -1,0 +1,50 @@
+import { prisma } from "@/lib/prisma";
+
+type SubscriptionUpdate = {
+  subscriptionStatus?: string | null;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  planRenewsAt?: Date | null;
+};
+
+export async function getSubscriptionStatus(
+  userId: string,
+): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      subscriptionStatus: true,
+    },
+  });
+
+  return user?.subscriptionStatus ?? null;
+}
+
+export async function setSubscriptionByUserId(
+  userId: string,
+  data: SubscriptionUpdate,
+): Promise<void> {
+  await prisma.user.update({
+    where: {
+      id: userId,
+    },
+    data,
+  });
+}
+
+export async function findUserByStripeSubscription(
+  subscriptionId: string,
+): Promise<string | null> {
+  const user = await prisma.user.findFirst({
+    where: {
+      stripeSubscriptionId: subscriptionId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return user?.id ?? null;
+}

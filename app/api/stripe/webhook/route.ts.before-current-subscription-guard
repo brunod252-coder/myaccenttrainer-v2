@@ -145,57 +145,7 @@ export async function POST(request: Request) {
         break;
       }
 
-      case "customer.subscription.created": {
-        const subscription =
-          event.data.object as Stripe.Subscription;
-
-        const userId =
-          subscription.metadata?.userId ||
-          (await findUserByStripeSubscription(
-            subscription.id,
-          ));
-
-        if (!userId) {
-          console.warn(
-            "STRIPE_SUBSCRIPTION_USER_NOT_FOUND",
-            {
-              eventId: event.id,
-              subscriptionId: subscription.id,
-            },
-          );
-
-          break;
-        }
-
-        const customerId =
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer.id;
-
-        await setSubscriptionByUserId(userId, {
-          subscriptionStatus:
-            normalizeSubscriptionStatus(
-              subscription,
-            ),
-          stripeCustomerId: customerId,
-          stripeSubscriptionId: subscription.id,
-          planRenewsAt:
-            getSubscriptionEndDate(subscription),
-        });
-
-        console.log(
-          "STRIPE_SUBSCRIPTION_SYNCHRONIZED",
-          {
-            eventId: event.id,
-            userId,
-            subscriptionId: subscription.id,
-            status: subscription.status,
-          },
-        );
-
-        break;
-      }
-
+      case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription =
           event.data.object as Stripe.Subscription;
@@ -212,39 +162,6 @@ export async function POST(request: Request) {
             {
               eventId: event.id,
               subscriptionId: subscription.id,
-            },
-          );
-
-          break;
-        }
-
-        const localUser =
-          await prisma.user.findUnique({
-            where: {
-              id: userId,
-            },
-            select: {
-              stripeSubscriptionId: true,
-            },
-          });
-
-        const isCurrentOrUnassigned =
-          !localUser?.stripeSubscriptionId ||
-          localUser.stripeSubscriptionId ===
-            subscription.id;
-
-        if (!isCurrentOrUnassigned) {
-          console.warn(
-            "STRIPE_SUBSCRIPTION_UPDATED_STALE_SKIPPED",
-            {
-              eventId: event.id,
-              userId,
-              eventSubscriptionId:
-                subscription.id,
-              currentSubscriptionId:
-                localUser?.stripeSubscriptionId ??
-                null,
-              status: subscription.status,
             },
           );
 
@@ -290,61 +207,12 @@ export async function POST(request: Request) {
             subscription.id,
           ));
 
-        if (!userId) {
-          console.warn(
-            "STRIPE_SUBSCRIPTION_DELETED_USER_NOT_FOUND",
-            {
-              eventId: event.id,
-              subscriptionId: subscription.id,
-            },
-          );
-
-          break;
-        }
-
-        const localUser =
-          await prisma.user.findUnique({
-            where: {
-              id: userId,
-            },
-            select: {
-              stripeSubscriptionId: true,
-            },
+        if (userId) {
+          await setSubscriptionByUserId(userId, {
+            subscriptionStatus: "canceled",
+            planRenewsAt: null,
           });
-
-        if (
-          localUser?.stripeSubscriptionId !==
-          subscription.id
-        ) {
-          console.warn(
-            "STRIPE_SUBSCRIPTION_DELETED_STALE_SKIPPED",
-            {
-              eventId: event.id,
-              userId,
-              deletedSubscriptionId:
-                subscription.id,
-              currentSubscriptionId:
-                localUser?.stripeSubscriptionId ??
-                null,
-            },
-          );
-
-          break;
         }
-
-        await setSubscriptionByUserId(userId, {
-          subscriptionStatus: "canceled",
-          planRenewsAt: null,
-        });
-
-        console.log(
-          "STRIPE_SUBSCRIPTION_DELETED_SYNCHRONIZED",
-          {
-            eventId: event.id,
-            userId,
-            subscriptionId: subscription.id,
-          },
-        );
 
         break;
       }
@@ -509,38 +377,9 @@ export async function POST(request: Request) {
           break;
         }
 
-        const localUser =
-          await prisma.user.findUnique({
-            where: {
-              id: userId,
-            },
-            select: {
-              stripeSubscriptionId: true,
-            },
-          });
-
-        const isCurrentSubscription =
-          localUser?.stripeSubscriptionId ===
-          subscriptionId;
-
-        if (isCurrentSubscription) {
-          await setSubscriptionByUserId(userId, {
-            subscriptionStatus: "past_due",
-          });
-        } else {
-          console.warn(
-            "STRIPE_PAYMENT_FAILED_STALE_SUBSCRIPTION_SKIPPED",
-            {
-              eventId: event.id,
-              userId,
-              eventSubscriptionId:
-                subscriptionId,
-              currentSubscriptionId:
-                localUser?.stripeSubscriptionId ??
-                null,
-            },
-          );
-        }
+        await setSubscriptionByUserId(userId, {
+          subscriptionStatus: "past_due",
+        });
 
         const currency =
           invoice.currency.toUpperCase();
@@ -574,7 +413,6 @@ export async function POST(request: Request) {
               amountDue:
                 invoice.amount_due,
               currency,
-              isCurrentSubscription,
             },
           });
 
