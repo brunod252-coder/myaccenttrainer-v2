@@ -45,3 +45,72 @@ export async function consumeToken(token: string, type: TokenType): Promise<stri
     return null;
   }
 }
+
+
+// Atomically verify an email address and consume its verification token.
+//
+// The token and User.emailVerified state are committed together.
+// If either database update fails, Prisma rolls back the transaction,
+// leaving the token unused so the learner can try again.
+export async function verifyEmailWithToken(
+  token: string,
+): Promise<string | null> {
+  if (!token) return null;
+
+  return prisma.$transaction(async (tx) => {
+    const row = await tx.verificationToken.findFirst({
+      where: {
+        token,
+        type: "verify",
+      },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        usedAt: true,
+      },
+    });
+
+    if (
+      !row ||
+      row.usedAt ||
+      row.expiresAt.getTime() < Date.now()
+    ) {
+      return null;
+    }
+
+    /*
+     * Claim the token only if it is still unused.
+     * This also protects against two requests attempting
+     * to consume the same link at nearly the same time.
+     */
+    const claimed = await tx.verificationToken.updateMany({
+      where: {
+        id: row.id,
+        usedAt: null,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+
+    if (claimed.count !== 1) {
+      return null;
+    }
+
+    await tx.user.update({
+      where: {
+        id: row.userId,
+      },
+      data: {
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+      },
+    });
+
+    return row.userId;
+  });
+}

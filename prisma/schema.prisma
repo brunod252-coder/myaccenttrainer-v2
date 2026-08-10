@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
 }
@@ -154,6 +155,8 @@ model WalletTransaction {
   walletAccount WalletAccount @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
+  @@unique([walletAccountId, referenceType, referenceId])
 }
 
 model ReferralInvite {
@@ -327,7 +330,7 @@ enum ReferralStatus {
 }
 
 model Notification {
-  id        String @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   type      String
   title     String
@@ -335,7 +338,7 @@ model Notification {
   href      String?
   metadata  Json?
   readAt    DateTime?
-  dedupeKey String? @unique
+  dedupeKey String?   @unique
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -345,3 +348,44 @@ model Notification {
   @@index([userId, readAt])
 }
 
+/**
+ * Durable transactional-email delivery ledger.
+ * deliveryKey provides application-level idempotency so webhook
+ * retries and repeated business events cannot send the same
+ * transactional email more than once after successful delivery.
+ * Failed attempts remain retryable because sentAt stays null.
+ */
+model EmailDelivery {
+  id String @id @default(cuid())
+
+  deliveryKey String  @unique
+  userId      String?
+
+  type      String
+  recipient String
+  subject   String
+
+  html String?
+  text String?
+  link String?
+
+  provider          String?
+  providerMessageId String?
+
+  attemptCount Int @default(0)
+
+  lastAttemptAt DateTime?
+  sentAt        DateTime?
+
+  lastError String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
+  @@index([recipient, createdAt])
+  @@index([sentAt])
+}

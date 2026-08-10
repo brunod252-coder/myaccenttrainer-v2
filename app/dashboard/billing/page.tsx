@@ -4,11 +4,18 @@ import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
 import SubscriptionActions from "./SubscriptionActions";
+import WalletInvoicePayment from "./WalletInvoicePayment";
 import { Arrow, CheckCircle } from "@/components/ui/icons";
+import {
+  getEnrollmentState,
+  hasPremiumAccess,
+  needsPaymentRecovery,
+} from "@/lib/auth/enrollment";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { formatMoney } from "@/lib/payments/plans";
 import { getStripeBillingHistory } from "@/lib/payments/stripe-billing";
+import { getWalletSummary } from "@/lib/payments/wallet";
 
 export default async function BillingPage() {
   const cookieStore = await cookies();
@@ -29,6 +36,7 @@ export default async function BillingPage() {
       lastName: true,
       email: true,
       role: true,
+      emailVerified: true,
       selectedPlanId: true,
       subscriptionStatus: true,
       planRenewsAt: true,
@@ -41,21 +49,42 @@ export default async function BillingPage() {
     redirect("/login");
   }
 
-  const invoices = await getStripeBillingHistory(
-    user.stripeCustomerId,
-  );
+  const [invoices, wallet] = await Promise.all([
+    getStripeBillingHistory(
+      user.stripeCustomerId,
+    ),
+    getWalletSummary(
+      payload.userId,
+      1,
+    ),
+  ]);
+
+  const payableInvoice =
+    invoices.find(
+      (invoice) =>
+        invoice.status === "open" &&
+        invoice.amountDue > 0,
+    ) ?? null;
 
   const status = user.subscriptionStatus;
 
-  const hasPremiumAccess = [
-    "trialing",
-    "active",
-    "cancel_scheduled",
-  ].includes(status ?? "");
+  const enrollmentState =
+    getEnrollmentState({
+      emailVerified: user.emailVerified,
+      subscriptionStatus: status,
+    });
 
-  const isTrialing = status === "trialing";
+  const hasPremium =
+    hasPremiumAccess(enrollmentState);
+
+  const isPaymentRecovery =
+    needsPaymentRecovery(enrollmentState);
+
+  const isTrialing =
+    enrollmentState === "TRIALING";
+
   const isCancelScheduled =
-    status === "cancel_scheduled";
+    enrollmentState === "CANCEL_SCHEDULED";
 
   const planName =
     user.selectedPlanId === "annual"
@@ -80,6 +109,8 @@ export default async function BillingPage() {
           ? "Active"
           : status === "past_due"
             ? "Past due"
+            : status === "payment_method_required"
+              ? "Payment required"
             : status === "canceled"
               ? "Canceled"
               : "No active plan";
@@ -138,9 +169,9 @@ export default async function BillingPage() {
               <span
                 className={
                   "rounded-full px-2.5 py-1 text-xs font-semibold " +
-                  (hasPremiumAccess
+                  (hasPremium
                     ? "bg-[#e5f3ec] text-[#2e7d5b]"
-                    : status === "past_due"
+                    : isPaymentRecovery
                       ? "bg-[#fff4e5] text-[#a35a00]"
                       : "bg-[#eef4f9] text-[#52719f]")
                 }
@@ -149,7 +180,7 @@ export default async function BillingPage() {
               </span>
             </div>
 
-            {hasPremiumAccess ? (
+            {hasPremium ? (
               <div className="mt-4">
                 <div className="flex items-start gap-3 rounded-xl border border-[#cdeee1] bg-[#f0faf6] p-4">
                   <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#20ad68]" />
@@ -208,7 +239,9 @@ export default async function BillingPage() {
                     </Link>
 
                     <SubscriptionActions
-                      status={status}
+                      enrollmentState={
+                        enrollmentState
+                      }
                     />
                   </div>
                 </div>
@@ -216,19 +249,52 @@ export default async function BillingPage() {
             ) : (
               <div className="mt-4">
                 <p className="text-sm leading-6 text-gray-600">
-                  {status === "past_due"
-                    ? "We could not complete your latest subscription payment. Please update your billing information."
+                  {isPaymentRecovery
+                    ? "We could not complete your latest subscription payment. Choose how you would like to settle the outstanding balance."
                     : status === "canceled"
                       ? "Your Premium membership has ended. Choose a plan whenever you are ready to continue."
                       : "Choose a membership plan to unlock every lesson and unlimited coaching."}
                 </p>
 
-                <Link
-                  href="/onboarding/plan"
-                  className="mt-4 inline-flex rounded-lg bg-[#20ad68] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#169357]"
-                >
-                  See plans
-                </Link>
+                {isPaymentRecovery &&
+                payableInvoice ? (
+                  <>
+                    <WalletInvoicePayment
+                      invoiceId={
+                        payableInvoice.id
+                      }
+                      amountDueMinor={
+                        payableInvoice.amountDue
+                      }
+                      currencyCode={
+                        payableInvoice.currency
+                      }
+                      balanceMinor={
+                        wallet.balanceMinor
+                      }
+                    />
+
+                    {payableInvoice.hostedInvoiceUrl ? (
+                      <a
+                        href={
+                          payableInvoice.hostedInvoiceUrl
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-flex text-sm font-semibold text-[#168c56] hover:text-[#127548]"
+                      >
+                        Pay with card instead
+                      </a>
+                    ) : null}
+                  </>
+                ) : (
+                  <Link
+                    href="/onboarding/plan"
+                    className="mt-4 inline-flex rounded-lg bg-[#20ad68] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#169357]"
+                  >
+                    See plans
+                  </Link>
+                )}
               </div>
             )}
           </div>

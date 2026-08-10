@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+import { emailShell } from "@/lib/email/send";
+import { sendTransactionalEmailOnce } from "@/lib/email/transactional";
+
 import {
   findUserByStripeSubscription,
   setSubscriptionByUserId,
 } from "@/lib/payments/subscription";
 import { createNotificationOnce } from "@/lib/notifications/service";
 import { prisma } from "@/lib/prisma";
+import {
+  markReferralSubscribed,
+  rewardPaidReferral,
+} from "@/lib/referrals/referrals";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -131,6 +138,146 @@ export async function POST(request: Request) {
           stripeCustomerId: customerId,
           stripeSubscriptionId: subscriptionId,
         });
+
+        const referralSubscribed =
+          await markReferralSubscribed(
+            userId,
+          );
+
+        console.log(
+          "REFERRAL_SUBSCRIPTION_LIFECYCLE_PROCESSED",
+          {
+            eventId: event.id,
+            userId,
+            subscriptionId,
+            referralSubscribed,
+          },
+        );
+
+
+          const welcomeUser =
+            await prisma.user.findUnique({
+              where: {
+                id: userId,
+              },
+              select: {
+                email: true,
+                firstName: true,
+                emailVerified: true,
+                selectedPlanId: true,
+              },
+            });
+
+          if (
+            welcomeUser?.email &&
+            welcomeUser.emailVerified
+          ) {
+            const firstName =
+              welcomeUser.firstName?.trim() ||
+              "there";
+
+            const planName =
+              welcomeUser.selectedPlanId === "annual"
+                ? "Premium Annual"
+                : welcomeUser.selectedPlanId === "monthly"
+                  ? "Premium Monthly"
+                  : "Premium";
+
+            const welcomeEmail =
+              await sendTransactionalEmailOnce({
+                deliveryKey:
+                  `premium-welcome:${subscriptionId}`,
+                userId,
+                type: "PREMIUM_WELCOME",
+                to: welcomeUser.email,
+                subject:
+                  "Welcome to My Accent Trainer Premium",
+                html: emailShell(
+                  `Welcome to Premium, ${firstName}`,
+                  `Your ${planName} membership is now active. You can start learning, practicing, and working with Nina from your My Accent Trainer dashboard.`,
+                  {
+                    label: "Open your dashboard",
+                    href:
+                      "https://myaccenttrainer.com/dashboard",
+                  },
+                ),
+                text:
+                  `Welcome to Premium, ${firstName}\n\n` +
+                  `Your ${planName} membership is now active. ` +
+                  "You can start learning, practicing, and working with Nina from your My Accent Trainer dashboard.\n\n" +
+                  "https://myaccenttrainer.com/dashboard",
+                metadata: {
+                  stripeEventId: event.id,
+                  stripeCustomerId: customerId,
+                  stripeSubscriptionId:
+                    subscriptionId,
+                  checkoutSessionId:
+                    session.id,
+                  selectedPlanId:
+                    welcomeUser.selectedPlanId,
+                },
+              });
+
+            console.log(
+              "STRIPE_PREMIUM_WELCOME_EMAIL_PROCESSED",
+              {
+                eventId: event.id,
+                userId,
+                subscriptionId,
+                deliveryId:
+                  welcomeEmail.deliveryId,
+                sent: welcomeEmail.sent,
+                skipped:
+                  welcomeEmail.skipped,
+              },
+            );
+          } else {
+            console.warn(
+              "STRIPE_PREMIUM_WELCOME_EMAIL_SKIPPED",
+              {
+                eventId: event.id,
+                userId,
+                subscriptionId,
+                reason:
+                  !welcomeUser
+                    ? "user_not_found"
+                    : !welcomeUser.email
+                      ? "email_missing"
+                      : "email_not_verified",
+              },
+            );
+          }
+
+          const notificationResult =
+            await createNotificationOnce({
+              userId,
+              type: "billing.trial_started",
+              title: "Your Premium trial is active",
+              body:
+                "Welcome to My Accent Trainer Premium. Your trial is now active, and you have full access to your Premium learning experience.",
+              href: "/dashboard",
+              dedupeKey:
+                `stripe:event:${event.id}`,
+              metadata: {
+                stripeEventId: event.id,
+                stripeCustomerId: customerId,
+                stripeSubscriptionId:
+                  subscriptionId,
+                checkoutSessionId:
+                  session.id,
+              },
+            });
+
+          console.log(
+            "STRIPE_TRIAL_STARTED_NOTIFICATION_PROCESSED",
+            {
+              eventId: event.id,
+              userId,
+              subscriptionId,
+              created:
+                notificationResult.created,
+            },
+          );
 
         console.log(
           "STRIPE_CHECKOUT_SESSION_SYNCHRONIZED",
@@ -337,6 +484,42 @@ export async function POST(request: Request) {
           planRenewsAt: null,
         });
 
+        const notificationResult =
+          await createNotificationOnce({
+            userId,
+            type: "billing.subscription_ended",
+            title: "Premium membership ended",
+            body:
+              "Your My Accent Trainer Premium membership has ended. You can choose a plan again whenever you’re ready to return.",
+            href: "/prices",
+            dedupeKey:
+              `stripe:event:${event.id}`,
+            metadata: {
+              stripeEventId: event.id,
+              stripeSubscriptionId:
+                subscription.id,
+              stripeStatus:
+                subscription.status,
+              endedAt:
+                subscription.ended_at,
+              canceledAt:
+                subscription.canceled_at,
+              isCurrentSubscription: true,
+            },
+          });
+
+        console.log(
+          "STRIPE_SUBSCRIPTION_ENDED_NOTIFICATION_PROCESSED",
+          {
+            eventId: event.id,
+            userId,
+            subscriptionId:
+              subscription.id,
+            created:
+              notificationResult.created,
+          },
+        );
+
         console.log(
           "STRIPE_SUBSCRIPTION_DELETED_SYNCHRONIZED",
           {
@@ -417,6 +600,60 @@ export async function POST(request: Request) {
           break;
         }
 
+        const localUser =
+          await prisma.user.findUnique({
+            where: {
+              id: userId,
+            },
+            select: {
+              stripeSubscriptionId: true,
+            },
+          });
+
+        const isCurrentSubscription =
+          localUser?.stripeSubscriptionId ===
+          subscriptionId;
+
+        if (!isCurrentSubscription) {
+          console.warn(
+            "STRIPE_INVOICE_PAID_STALE_SUBSCRIPTION_SKIPPED",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+              userId,
+              eventSubscriptionId:
+                subscriptionId,
+              currentSubscriptionId:
+                localUser?.stripeSubscriptionId ??
+                null,
+            },
+          );
+
+          break;
+        }
+
+        const paidReferralReward =
+          await rewardPaidReferral(
+            userId,
+          );
+
+        console.log(
+          "PAID_REFERRAL_REWARD_PROCESSED",
+          {
+            eventId: event.id,
+            invoiceId: invoice.id,
+            userId,
+            subscriptionId,
+            rewarded:
+              paidReferralReward.rewarded,
+            reason:
+              paidReferralReward.reason,
+            referralInviteId:
+              paidReferralReward.referralInviteId ??
+              null,
+          },
+        );
+
         const currency =
           invoice.currency.toUpperCase();
 
@@ -430,6 +667,54 @@ export async function POST(request: Request) {
           ).format(
             invoice.amount_paid / 100,
           );
+
+        const paymentSource =
+          invoice.metadata?.mat_payment_source ??
+          null;
+
+        if (paymentSource === "wallet") {
+          const walletResult =
+            await createNotificationOnce({
+              userId,
+              type: "billing.wallet_payment_received",
+              title: "Wallet payment applied",
+              body:
+                `Your ${amount} My Accent Trainer wallet payment was applied to your Premium subscription.`,
+              href: "/dashboard/billing",
+              dedupeKey:
+                `stripe:event:${event.id}`,
+              metadata: {
+                stripeEventId: event.id,
+                stripeInvoiceId: invoice.id,
+                stripeSubscriptionId:
+                  subscriptionId,
+                amountPaid:
+                  invoice.amount_paid,
+                currency,
+                paymentSource: "wallet",
+                walletReferenceType:
+                  invoice.metadata?.mat_wallet_reference_type ??
+                  null,
+                walletReferenceId:
+                  invoice.metadata?.mat_wallet_reference_id ??
+                  null,
+                isCurrentSubscription: true,
+              },
+            });
+
+          console.log(
+            "STRIPE_WALLET_PAYMENT_NOTIFICATION_PROCESSED",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+              userId,
+              created:
+                walletResult.created,
+            },
+          );
+
+          break;
+        }
 
         const result =
           await createNotificationOnce({
@@ -446,6 +731,7 @@ export async function POST(request: Request) {
               stripeInvoiceId: invoice.id,
               stripeSubscriptionId:
                 subscriptionId,
+              isCurrentSubscription: true,
               amountPaid:
                 invoice.amount_paid,
               currency,
@@ -459,6 +745,174 @@ export async function POST(request: Request) {
             invoiceId: invoice.id,
             userId,
             created: result.created,
+          },
+        );
+
+        break;
+      }
+
+      case "invoice.voided": {
+        const invoice =
+          event.data.object as Stripe.Invoice;
+
+        /*
+         * A voided invoice is considered a wallet settlement
+         * only when it carries the complete provenance written
+         * by the MAT wallet payment service.
+         *
+         * Ordinary/admin Stripe invoice voids must never be
+         * presented to the user as wallet payments.
+         */
+        const paymentSource =
+          invoice.metadata?.mat_payment_source ??
+          null;
+
+        const walletReferenceType =
+          invoice.metadata?.mat_wallet_reference_type ??
+          null;
+
+        const walletReferenceId =
+          invoice.metadata?.mat_wallet_reference_id ??
+          null;
+
+        const isWalletSettlement =
+          paymentSource === "wallet" &&
+          walletReferenceType === "STRIPE_INVOICE" &&
+          walletReferenceId === invoice.id;
+
+        if (!isWalletSettlement) {
+          console.log(
+            "STRIPE_INVOICE_VOIDED_NON_WALLET_SKIPPED",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+            },
+          );
+
+          break;
+        }
+
+        const subscriptionId =
+          typeof invoice.parent?.subscription_details
+            ?.subscription === "string"
+            ? invoice.parent.subscription_details
+                .subscription
+            : null;
+
+        if (!subscriptionId) {
+          console.warn(
+            "STRIPE_WALLET_INVOICE_VOIDED_SUBSCRIPTION_NOT_FOUND",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+            },
+          );
+
+          break;
+        }
+
+        const stripe = getStripe();
+
+        const userId =
+          await resolveUserIdFromStripeSubscription(
+            stripe,
+            subscriptionId,
+          );
+
+        if (!userId) {
+          console.warn(
+            "STRIPE_WALLET_INVOICE_VOIDED_USER_NOT_FOUND",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+              subscriptionId,
+            },
+          );
+
+          break;
+        }
+
+        const localUser =
+          await prisma.user.findUnique({
+            where: {
+              id: userId,
+            },
+            select: {
+              stripeSubscriptionId: true,
+            },
+          });
+
+        const isCurrentSubscription =
+          localUser?.stripeSubscriptionId ===
+          subscriptionId;
+
+        if (!isCurrentSubscription) {
+          console.warn(
+            "STRIPE_WALLET_INVOICE_VOIDED_STALE_SUBSCRIPTION_SKIPPED",
+            {
+              eventId: event.id,
+              invoiceId: invoice.id,
+              userId,
+              eventSubscriptionId:
+                subscriptionId,
+              currentSubscriptionId:
+                localUser?.stripeSubscriptionId ??
+                null,
+            },
+          );
+
+          break;
+        }
+
+        const currency =
+          invoice.currency.toUpperCase();
+
+        const amount =
+          new Intl.NumberFormat(
+            "en-US",
+            {
+              style: "currency",
+              currency,
+            },
+          ).format(
+            invoice.amount_due / 100,
+          );
+
+        const walletResult =
+          await createNotificationOnce({
+            userId,
+            type: "billing.wallet_payment_received",
+            title: "Wallet payment applied",
+            body:
+              `Your ${amount} My Accent Trainer wallet payment was applied to your Premium subscription.`,
+            href: "/dashboard/billing",
+            dedupeKey:
+              `stripe:event:${event.id}`,
+            metadata: {
+              stripeEventId: event.id,
+              stripeInvoiceId: invoice.id,
+              stripeSubscriptionId:
+                subscriptionId,
+              amountPaid:
+                invoice.amount_due,
+              currency,
+              paymentSource: "wallet",
+              walletReferenceType,
+              walletReferenceId,
+              settlementMethod:
+                "managed_payments_invoice_void",
+              isCurrentSubscription: true,
+            },
+          });
+
+        console.log(
+          "STRIPE_WALLET_INVOICE_VOIDED_NOTIFICATION_PROCESSED",
+          {
+            eventId: event.id,
+            invoiceId: invoice.id,
+            userId,
+            created:
+              walletResult.created,
           },
         );
 

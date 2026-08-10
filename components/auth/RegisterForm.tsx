@@ -73,7 +73,7 @@ export default function RegisterForm() {
     >
             {referralCode && (
         <div className="mb-6 rounded-lg border border-[#cdeee1] bg-[#f0faf6] p-3 text-sm text-[#168c56]">
-          🎁 You were invited! You and your friend each get $5 credit when you join.
+          🎁 You were invited! You and your friend each get $10 in learning credit when you join.
         </div>
       )}
       {message && (

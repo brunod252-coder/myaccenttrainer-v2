@@ -54,3 +54,15 @@ next-env.d.ts
 
 # generated local files
 /tsconfig.tsbuildinfo
+
+# MyAccentTrainer local safety copies
+*.before-*
+*.bak
+*.backup
+
+# Runtime logs
+*.log
+
+# Local safety/archive directories
+/backups/
+/safety-archives/

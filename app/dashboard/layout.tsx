@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 
-import { requireEnrollment } from "@/lib/auth/requireEnrollment";
+import { requireAuthenticatedUser } from "@/lib/auth/requireAuthenticatedUser";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  await requireEnrollment();
+  await requireAuthenticatedUser();
 
   return <>{children}</>;
 }

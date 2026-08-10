@@ -7,6 +7,10 @@ import RedeemPromo from "@/components/app/RedeemPromo";
 import SendCreditForm from "@/components/app/SendCreditForm";
 import AppLayout from "@/components/layouts/AppLayout";
 import { Arrow, Gift } from "@/components/ui/icons";
+import {
+  getEnrollmentState,
+  hasPremiumAccess,
+} from "@/lib/auth/enrollment";
 import { verifyAuthToken } from "@/lib/jwt";
 import { formatMoney } from "@/lib/payments/plans";
 import { getSubscriptionStatus } from "@/lib/payments/subscription";
@@ -32,6 +36,7 @@ export default async function WalletPage() {
       lastName: true,
       email: true,
       role: true,
+      emailVerified: true,
     },
   });
 
@@ -45,7 +50,14 @@ export default async function WalletPage() {
   ]);
 
   const currency = wallet.currency;
-  const isActive = subscriptionStatus === "active";
+  const enrollmentState =
+    getEnrollmentState({
+      emailVerified: user.emailVerified,
+      subscriptionStatus,
+    });
+
+  const isActive =
+    hasPremiumAccess(enrollmentState);
 
   const userName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;

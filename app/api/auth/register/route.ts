@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { createToken } from "@/lib/auth/tokens";
 import { sendEmail, emailShell, appUrl } from "@/lib/email/send";
-import { ensureReferralCode, findInviterByCode, rewardReferral } from "@/lib/referrals/referrals";
+import { ensureReferralCode, findInviterByCode, registerReferral } from "@/lib/referrals/referrals";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
@@ -82,11 +82,22 @@ export async function POST(req: Request) {
     // Give the new learner their own referral code.
     await ensureReferralCode(user.id);
 
-    // If they signed up via a referral code, reward both sides ($5 each).
+    // If they signed up via a referral code, record the referral.
+    // Rewards are issued only after the referred learner makes
+    // their first successful paid subscription payment.
     if (data.referralCode) {
-      const inviterId = await findInviterByCode(data.referralCode);
+      const inviterId =
+        await findInviterByCode(data.referralCode);
+
       if (inviterId && inviterId !== user.id) {
-        await rewardReferral(inviterId, user.id, user.email, [data.firstName, data.lastName].filter(Boolean).join(" ") || undefined);
+        await registerReferral(
+          inviterId,
+          user.id,
+          user.email,
+          [data.firstName, data.lastName]
+            .filter(Boolean)
+            .join(" ") || undefined,
+        );
       }
     }
 

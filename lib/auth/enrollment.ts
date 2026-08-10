@@ -116,3 +116,96 @@ function normalizeSubscriptionStatus(
 ): string {
   return status?.trim().toLowerCase() ?? "";
 }
+
+/**
+ * Central enrollment semantics.
+ *
+ * These helpers intentionally operate on EnrollmentState rather
+ * than raw Stripe/local subscription status strings.
+ *
+ * UI pages, route guards, and application authorization should
+ * consume these meanings instead of maintaining independent
+ * status arrays.
+ */
+
+const PAYMENT_RECOVERY_STATES =
+  new Set<EnrollmentState>([
+    "PAYMENT_METHOD_REQUIRED",
+    "PAST_DUE",
+  ]);
+
+const ENDED_MEMBERSHIP_STATES =
+  new Set<EnrollmentState>([
+    "CANCELED",
+    "EXPIRED",
+  ]);
+
+const PLAN_SELECTION_STATES =
+  new Set<EnrollmentState>([
+    "PLAN_SELECTION_REQUIRED",
+    "CANCELED",
+    "EXPIRED",
+  ]);
+
+export function hasPremiumAccess(
+  state: EnrollmentState,
+): boolean {
+  return canAccessDashboard(state);
+}
+
+export function needsPaymentRecovery(
+  state: EnrollmentState,
+): boolean {
+  return PAYMENT_RECOVERY_STATES.has(state);
+}
+
+export function hasEndedMembership(
+  state: EnrollmentState,
+): boolean {
+  return ENDED_MEMBERSHIP_STATES.has(state);
+}
+
+export function canChoosePlan(
+  state: EnrollmentState,
+): boolean {
+  return PLAN_SELECTION_STATES.has(state);
+}
+
+/**
+ * This is an application-level checkout eligibility decision.
+ *
+ * It does NOT replace Stripe's authoritative duplicate-
+ * subscription/reconciliation checks in /api/checkout.
+ */
+export function canStartCheckout(
+  state: EnrollmentState,
+): boolean {
+  return (
+    state === "PLAN_SELECTION_REQUIRED" ||
+    state === "CANCELED" ||
+    state === "EXPIRED"
+  );
+}
+
+
+/**
+ * Subscription-management semantics.
+ *
+ * These helpers describe actions available to the learner.
+ * Stripe remains authoritative when the corresponding API
+ * endpoint actually performs the subscription mutation.
+ */
+export function canCancelSubscription(
+  state: EnrollmentState,
+): boolean {
+  return (
+    state === "TRIALING" ||
+    state === "ACTIVE"
+  );
+}
+
+export function canResumeSubscription(
+  state: EnrollmentState,
+): boolean {
+  return state === "CANCEL_SCHEDULED";
+}

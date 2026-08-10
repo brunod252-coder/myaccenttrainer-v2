@@ -29,7 +29,7 @@ export default async function ReferralsPage() {
   const joined = invites.filter((i) => i.status !== "SENT").length;
   const rewarded = invites.filter((i) => i.status === "REWARDED").length;
   const pending = invites.filter((i) => i.status === "SENT").length;
-  const creditEarned = rewarded * 5;
+  const creditEarned = rewarded * 10;
   const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
   return (
@@ -49,7 +49,7 @@ export default async function ReferralsPage() {
               </div>
               <h2 className="font-display text-lg text-[#17223b]">Your referral code</h2>
             </div>
-            <span className="rounded-full bg-[#20ad68] px-3 py-1 text-xs font-semibold text-white">$5 each</span>
+            <span className="rounded-full bg-[#20ad68] px-3 py-1 text-xs font-semibold text-white">$10 each</span>
           </div>
 
           <InviteFriend referralCode={referralCode} />

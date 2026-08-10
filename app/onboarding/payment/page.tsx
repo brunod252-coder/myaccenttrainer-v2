@@ -3,6 +3,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import CheckoutButton from "./CheckoutButton";
+import {
+  canChoosePlan,
+  getEnrollmentRedirect,
+  getEnrollmentState,
+} from "@/lib/auth/enrollment";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import {
@@ -42,16 +47,29 @@ export default async function OnboardingPaymentPage() {
     redirect("/login");
   }
 
-  if (!user.emailVerified) {
-    redirect("/verify-email");
+  const enrollmentState =
+    getEnrollmentState({
+      emailVerified: user.emailVerified,
+      subscriptionStatus:
+        user.subscriptionStatus,
+    });
+
+  if (canChoosePlan(enrollmentState)) {
+    redirect("/onboarding/plan");
   }
 
   if (
-    user.subscriptionStatus === "trialing" ||
-    user.subscriptionStatus === "active" ||
-    user.subscriptionStatus === "cancel_scheduled"
+    enrollmentState !==
+    "PAYMENT_METHOD_REQUIRED"
   ) {
-    redirect("/dashboard");
+    const destination =
+      getEnrollmentRedirect(
+        enrollmentState,
+      );
+
+    redirect(
+      destination ?? "/dashboard",
+    );
   }
 
   if (!user.selectedPlanId) {

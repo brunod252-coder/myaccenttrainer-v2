@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import PlanSelectionForm from "./PlanSelectionForm";
+import {
+  canChoosePlan,
+  getEnrollmentRedirect,
+  getEnrollmentState,
+} from "@/lib/auth/enrollment";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 
@@ -35,15 +40,22 @@ export default async function OnboardingPlanPage() {
     redirect("/login");
   }
 
-  if (!user.emailVerified) {
-    redirect("/verify-email");
-  }
+  const enrollmentState =
+    getEnrollmentState({
+      emailVerified: user.emailVerified,
+      subscriptionStatus:
+        user.subscriptionStatus,
+    });
 
-  if (
-    user.subscriptionStatus === "trialing" ||
-    user.subscriptionStatus === "active"
-  ) {
-    redirect("/dashboard");
+  if (!canChoosePlan(enrollmentState)) {
+    const destination =
+      getEnrollmentRedirect(
+        enrollmentState,
+      );
+
+    redirect(
+      destination ?? "/dashboard",
+    );
   }
 
   const name = user.firstName || "there";

@@ -40,11 +40,18 @@ export type WalletTransferResult =
   WalletTransferSuccess | WalletTransferFailure;
 
 function transferReference(requestId: string): string {
-  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  /*
+   * A transfer reference must be deterministic for the lifetime
+   * of the requestId. Never include the current date/time here:
+   * retries may occur on another day and must still resolve to
+   * the exact same transfer identity.
+   */
+  const stableId =
+    requestId
+      .replaceAll("-", "")
+      .toUpperCase();
 
-  const suffix = requestId.replaceAll("-", "").slice(0, 8).toUpperCase();
-
-  return `MAT-TRF-${date}-${suffix}`;
+  return `MAT-TRF-${stableId}`;
 }
 
 function displayName(user: {

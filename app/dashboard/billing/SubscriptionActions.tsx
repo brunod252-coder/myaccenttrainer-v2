@@ -3,12 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import {
+  canCancelSubscription,
+  canResumeSubscription,
+  type EnrollmentState,
+} from "@/lib/auth/enrollment";
+
 type Props = {
-  status: string | null;
+  enrollmentState: EnrollmentState;
 };
 
 export default function SubscriptionActions({
-  status,
+  enrollmentState,
 }: Props) {
   const router = useRouter();
 
@@ -19,11 +25,10 @@ export default function SubscriptionActions({
   const [error, setError] = useState(false);
 
   const canCancel =
-    status === "trialing" ||
-    status === "active";
+    canCancelSubscription(enrollmentState);
 
   const canResume =
-    status === "cancel_scheduled";
+    canResumeSubscription(enrollmentState);
 
   async function runAction(
     endpoint:
