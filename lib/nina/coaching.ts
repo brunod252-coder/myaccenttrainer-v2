@@ -6,26 +6,12 @@ import { getNinaBrain } from "@/lib/nina/brain";
 import { getAnalytics } from "@/lib/analytics/insights";
 import {
   getLearningProfile,
+  getLessonRecommendationForFocus,
+  getMissionLessonRecommendations,
   type LearningLevel,
   type LearningMission,
 } from "@/lib/learning";
 import { getGoal, type Goal } from "@/lib/nina/goals";
-
-const FOCUS_LESSON: Record<string, { slug: string; label: string }> = {
-  r: { slug: "american-r", label: "The American R" },
-  l: { slug: "american-l", label: "The American L" },
-  th: { slug: "th-voiceless", label: "The TH sound" },
-  v: { slug: "v-and-w", label: "V versus W" },
-  w: { slug: "v-and-w", label: "V versus W" },
-  sh: { slug: "sh-sound", label: "The SH sound" },
-  ee: { slug: "ship-sheep", label: "Ship vs. Sheep" },
-  stress: { slug: "word-stress", label: "Word stress" },
-  endings: { slug: "final-consonants", label: "Final consonants" },
-  linking: { slug: "linking", label: "Linking words" },
-};
-
-// Fallback first-week sequence when no specific learning mission is available.
-const STARTER = ["r", "th", "v"];
 
 export type Exercise = { focus: string; label: string; slug: string; why: string };
 
@@ -56,9 +42,15 @@ export type CoachingPlan = {
 };
 
 function exFor(focus: string, why: string): Exercise | null {
-  const l = FOCUS_LESSON[focus];
-  if (!l) return null;
-  return { focus, label: l.label, slug: l.slug, why };
+  const lesson = getLessonRecommendationForFocus(focus);
+  if (!lesson) return null;
+
+  return {
+    focus: lesson.focus,
+    label: lesson.label,
+    slug: lesson.slug,
+    why,
+  };
 }
 
 export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
@@ -107,32 +99,18 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
   // Build today's exercises.
   const exercises: Exercise[] = [];
   if (!brain.hasData) {
-    const starterFocuses =
-      learningProfile.mission.key === "general"
-        ? STARTER
-        : learningProfile.mission.preferredFocuses;
+    const recommendations = getMissionLessonRecommendations(
+      learningProfile.mission,
+      3,
+    );
 
-    for (const f of starterFocuses) {
-      if (exercises.length >= 3) break;
+    for (const recommendation of recommendations) {
+      const why =
+        recommendation.source === "fallback"
+          ? "A strong pronunciation foundation while Nina learns more about your speech."
+          : `Selected for your ${learningProfile.mission.shortLabel} goal — ${learningProfile.mission.priorities[0]}.`;
 
-      const e = exFor(
-        f,
-        `Selected for your ${learningProfile.mission.shortLabel} goal — ${learningProfile.mission.priorities[0]}.`,
-      );
-
-      if (e && !exercises.some((x) => x.slug === e.slug)) {
-        exercises.push(e);
-      }
-    }
-
-    // Defensive fallback if a future mission references unavailable lesson focuses.
-    for (const f of STARTER) {
-      if (exercises.length >= 3) break;
-
-      const e = exFor(
-        f,
-        "A strong pronunciation foundation while Nina learns more about your speech.",
-      );
+      const e = exFor(recommendation.focus, why);
 
       if (e && !exercises.some((x) => x.slug === e.slug)) {
         exercises.push(e);

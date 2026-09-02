@@ -6,6 +6,10 @@ import AppLayout from "@/components/layouts/AppLayout";
 import LessonSaveControls from "@/components/lesson/LessonSaveControls";
 import { Mic, Arrow } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
+import {
+  getLearningProfile,
+  getMissionLessonRecommendations,
+} from "@/lib/learning";
 import { getMergedLessons, type Lesson } from "@/lib/lessons";
 import { getBookmarkState } from "@/lib/lessons/bookmarks";
 import { prisma } from "@/lib/prisma";
@@ -22,8 +26,11 @@ export default async function PracticePage() {
   });
   if (!user) redirect("/login");
 
-  const lessons = await getMergedLessons();
-  const bookmarks = await getBookmarkState(payload.userId);
+  const [lessons, bookmarks, learningProfile] = await Promise.all([
+    getMergedLessons(),
+    getBookmarkState(payload.userId),
+    getLearningProfile(payload.userId),
+  ]);
   const favSet = new Set(bookmarks.favorites);
   const saveSet = new Set(bookmarks.bookmarks);
   const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
@@ -32,12 +39,33 @@ export default async function PracticePage() {
   const favLessons = bookmarks.favorites.map((s) => bySlug.get(s)).filter(Boolean) as Lesson[];
   const savedLessons = bookmarks.bookmarks.map((s) => bySlug.get(s)).filter(Boolean) as Lesson[];
 
-  function Card({ lesson }: { lesson: Lesson }) {
+  const recommendedLessons = getMissionLessonRecommendations(
+    learningProfile.mission,
+    3,
+  )
+    .map((recommendation) => bySlug.get(recommendation.slug))
+    .filter(Boolean) as Lesson[];
+
+  function Card({
+    lesson,
+    recommended = false,
+  }: {
+    lesson: Lesson;
+    recommended?: boolean;
+  }) {
     return (
       <Link
         href={`/dashboard/lesson/${lesson.slug}`}
         className="group relative flex flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
       >
+        {recommended && (
+          <div className="mb-4">
+            <span className="inline-flex rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">
+              Nina recommends
+            </span>
+          </div>
+        )}
+
         <div className="flex items-start justify-between">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e9f8f3] text-[#20ad68]">
             <Mic className="h-6 w-6" />
@@ -68,9 +96,37 @@ export default async function PracticePage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">Practice</p>
         <h1 className="mt-1 font-display text-3xl text-[#17223b]">Lessons with Nina</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Pick a sound to practice. Tap the heart to favorite a lesson, or save one for later.
+          Nina prioritizes lessons around your learning goal while keeping the full pronunciation library available.
         </p>
       </div>
+
+        {recommendedLessons.length > 0 && (
+          <section className="mb-10">
+            <div className="mb-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">
+                Your learning plan
+              </p>
+
+              <h2 className="mt-1 font-display text-2xl text-[#17223b]">
+                Recommended for your {learningProfile.mission.shortLabel} goal
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                {learningProfile.level} · These pronunciation lessons support the priorities in your personalized learning plan.
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {recommendedLessons.map((lesson) => (
+                <Card
+                  key={`recommended-${lesson.slug}`}
+                  lesson={lesson}
+                  recommended
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
       {favLessons.length > 0 && (
         <section className="mb-8">
@@ -96,12 +152,27 @@ export default async function PracticePage() {
         </section>
       )}
 
-      {(favLessons.length > 0 || savedLessons.length > 0) && (
-        <h2 className="mb-3 font-display text-lg text-[#17223b]">All lessons</h2>
-      )}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {lessons.map((lesson) => <Card key={lesson.slug} lesson={lesson} />)}
-      </div>
+        <section>
+          <div className="mb-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Explore
+            </p>
+
+            <h2 className="mt-1 font-display text-xl text-[#17223b]">
+              Pronunciation library
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Browse every available lesson whenever you want to practice something different.
+            </p>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {lessons.map((lesson) => (
+              <Card key={lesson.slug} lesson={lesson} />
+            ))}
+          </div>
+        </section>
     </AppLayout>
   );
 }
