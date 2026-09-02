@@ -4,6 +4,11 @@
 
 import { getNinaBrain } from "@/lib/nina/brain";
 import { getAnalytics } from "@/lib/analytics/insights";
+import {
+  getLearningProfile,
+  type LearningLevel,
+  type LearningMission,
+} from "@/lib/learning";
 import { getGoal, type Goal } from "@/lib/nina/goals";
 
 const FOCUS_LESSON: Record<string, { slug: string; label: string }> = {
@@ -19,7 +24,7 @@ const FOCUS_LESSON: Record<string, { slug: string; label: string }> = {
   linking: { slug: "linking", label: "Linking words" },
 };
 
-// Sensible first-week sequence for brand-new learners.
+// Fallback first-week sequence when no specific learning mission is available.
 const STARTER = ["r", "th", "v"];
 
 export type Exercise = { focus: string; label: string; slug: string; why: string };
@@ -33,6 +38,8 @@ export type Review = {
 
 export type CoachingPlan = {
   hasData: boolean;
+  mission: LearningMission;
+  level: LearningLevel;
   headline: string;
   motivation: string;
   focusLabel: string | null;
@@ -55,10 +62,11 @@ function exFor(focus: string, why: string): Exercise | null {
 }
 
 export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
-  const [brain, analytics, goal] = await Promise.all([
+  const [brain, analytics, goal, learningProfile] = await Promise.all([
     getNinaBrain(userId),
     getAnalytics(userId),
     getGoal(userId),
+    getLearningProfile(userId),
   ]);
 
   // Weekly practice days from the calendar (last 7 vs previous 7).
@@ -99,9 +107,36 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
   // Build today's exercises.
   const exercises: Exercise[] = [];
   if (!brain.hasData) {
+    const starterFocuses =
+      learningProfile.mission.key === "general"
+        ? STARTER
+        : learningProfile.mission.preferredFocuses;
+
+    for (const f of starterFocuses) {
+      if (exercises.length >= 3) break;
+
+      const e = exFor(
+        f,
+        `Selected for your ${learningProfile.mission.shortLabel} goal — ${learningProfile.mission.priorities[0]}.`,
+      );
+
+      if (e && !exercises.some((x) => x.slug === e.slug)) {
+        exercises.push(e);
+      }
+    }
+
+    // Defensive fallback if a future mission references unavailable lesson focuses.
     for (const f of STARTER) {
-      const e = exFor(f, "A great place to start — one of the highest-impact sounds.");
-      if (e) exercises.push(e);
+      if (exercises.length >= 3) break;
+
+      const e = exFor(
+        f,
+        "A strong pronunciation foundation while Nina learns more about your speech.",
+      );
+
+      if (e && !exercises.some((x) => x.slug === e.slug)) {
+        exercises.push(e);
+      }
     }
   } else {
     if (brain.weakest) {
@@ -128,8 +163,25 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
     ? "You've practiced today — beautiful."
     : brain.hasData
       ? `Today's focus: ${focusLabel ?? "your next sound"}`
-      : "Let's begin your first session";
-  const motivation = pickMotivation(brain.streakDays, goalMet, practicedToday, brain.hasData);
+      : learningProfile.mission.key === "general"
+        ? "Let's begin your first session"
+        : learningProfile.mission.headline;
+
+  const motivation = brain.hasData
+    ? pickMotivation(
+        brain.streakDays,
+        goalMet,
+        practicedToday,
+        brain.hasData,
+      )
+    : learningProfile.mission.key === "general"
+      ? pickMotivation(
+          brain.streakDays,
+          goalMet,
+          practicedToday,
+          brain.hasData,
+        )
+      : `You're starting at the ${learningProfile.level} level. Today's session is built around your ${learningProfile.mission.label} goal.`;
 
   const clarityTargetProgress =
     goal.clarityTarget && brain.clarity !== null
@@ -138,6 +190,8 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
 
   return {
     hasData: brain.hasData,
+    mission: learningProfile.mission,
+    level: learningProfile.level,
     headline,
     motivation,
     focusLabel,
