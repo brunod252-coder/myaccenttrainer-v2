@@ -7,6 +7,7 @@ import { createToken } from "@/lib/auth/tokens";
 import { sendEmail, emailShell, appUrl } from "@/lib/email/send";
 import { ensureReferralCode, findInviterByCode, registerReferral } from "@/lib/referrals/referrals";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { signAuthToken, SESSION_MAX_AGE } from "@/lib/jwt";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -123,14 +124,36 @@ export async function POST(req: Request) {
       // never block signup on email
     }
 
-    return NextResponse.json(
+    const sessionToken = signAuthToken(
+      {
+        userId: user.id,
+        role: user.role,
+      },
+    );
+
+    const response = NextResponse.json(
       {
         message: "Account created successfully",
         user,
         devLink,
       },
-      { status: 201 }
+      { status: 201 },
     );
+
+    response.cookies.set(
+      "mat_session",
+      sessionToken,
+      {
+        httpOnly: true,
+        sameSite: "lax",
+        secure:
+          process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: SESSION_MAX_AGE,
+      },
+    );
+
+    return response;
   } catch (error) {
     console.error("REGISTER_ERROR", error);
 

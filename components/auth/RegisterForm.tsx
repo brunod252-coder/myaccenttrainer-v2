@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const LANGUAGES = [
   "French",
@@ -15,6 +16,7 @@ const LANGUAGES = [
 ];
 
 export default function RegisterForm() {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,9 +63,8 @@ export default function RegisterForm() {
       return;
     }
 
-    setMessage("Account created successfully — you can now log in.");
-    form.reset();
-    setIsSubmitting(false);
+    router.push("/verify-email");
+    router.refresh();
   }
 
   return (

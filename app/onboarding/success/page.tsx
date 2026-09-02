@@ -22,7 +22,7 @@ export default async function OnboardingSuccessPage() {
       <div className="mx-auto max-w-3xl">
         <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
           <span>My Accent Trainer</span>
-          <span>Step 5 of 5</span>
+          <span>Step 6 of 6</span>
         </div>
 
         <section className="rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-200/50 md:p-10">

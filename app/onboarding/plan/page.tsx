@@ -33,6 +33,12 @@ export default async function OnboardingPlanPage() {
       emailVerified: true,
       selectedPlanId: true,
       subscriptionStatus: true,
+      profile: {
+        select: {
+          englishGoal: true,
+          proficiencyLevel: true,
+        },
+      },
     },
   });
 
@@ -43,6 +49,8 @@ export default async function OnboardingPlanPage() {
   const enrollmentState =
     getEnrollmentState({
       emailVerified: user.emailVerified,
+      englishGoal: user.profile?.englishGoal,
+      proficiencyLevel: user.profile?.proficiencyLevel,
       subscriptionStatus:
         user.subscriptionStatus,
     });
@@ -65,7 +73,7 @@ export default async function OnboardingPlanPage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
           <span>My Accent Trainer</span>
-          <span>Step 3 of 5</span>
+          <span>Step 4 of 6</span>
         </div>
 
         <section className="rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-200/50 md:p-10">
@@ -84,12 +92,15 @@ export default async function OnboardingPlanPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-5">
+          <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
             <span className="font-semibold text-[#168c56]">✓ Account</span>
-            <span className="font-semibold text-[#168c56]">✓ Email</span>
-            <span className="font-semibold text-[#17223b]">3. Plan</span>
-            <span>4. Payment</span>
-            <span>5. Trial</span>
+            <span className="font-semibold text-[#168c56]">✓ Email
+            </span>
+            <span className="font-semibold text-[#168c56]">
+              ✓ Assessment</span>
+            <span className="font-semibold text-[#17223b]">4. Membership</span>
+            <span>5. Payment</span>
+            <span>6. Trial</span>
           </div>
 
           <PlanSelectionForm initialPlanId={user.selectedPlanId} />

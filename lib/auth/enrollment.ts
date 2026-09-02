@@ -1,5 +1,6 @@
 export type EnrollmentState =
   | "EMAIL_VERIFICATION_REQUIRED"
+  | "LEARNING_PROFILE_REQUIRED"
   | "PLAN_SELECTION_REQUIRED"
   | "PAYMENT_METHOD_REQUIRED"
   | "TRIALING"
@@ -11,6 +12,8 @@ export type EnrollmentState =
 
 export type EnrollmentUser = {
   emailVerified: boolean;
+  englishGoal?: string | null;
+  proficiencyLevel?: string | null;
   subscriptionStatus?: string | null;
   stripeCustomerId?: string | null;
   stripeSubscriptionId?: string | null;
@@ -33,6 +36,14 @@ export function getEnrollmentState(
 ): EnrollmentState {
   if (!user.emailVerified) {
     return "EMAIL_VERIFICATION_REQUIRED";
+  }
+
+  const hasLearningProfile =
+    Boolean(user.englishGoal?.trim()) &&
+    Boolean(user.proficiencyLevel?.trim());
+
+  if (!hasLearningProfile) {
+    return "LEARNING_PROFILE_REQUIRED";
   }
 
   const status = normalizeSubscriptionStatus(user.subscriptionStatus);
@@ -83,6 +94,9 @@ export function getEnrollmentRedirect(
   switch (state) {
     case "EMAIL_VERIFICATION_REQUIRED":
       return "/verify-email";
+
+    case "LEARNING_PROFILE_REQUIRED":
+      return "/onboarding/assessment";
 
     case "PLAN_SELECTION_REQUIRED":
       return "/onboarding/plan";

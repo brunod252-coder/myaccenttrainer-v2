@@ -37,6 +37,12 @@ export default async function BillingPage() {
       email: true,
       role: true,
       emailVerified: true,
+      profile: {
+        select: {
+          englishGoal: true,
+          proficiencyLevel: true,
+        },
+      },
       selectedPlanId: true,
       subscriptionStatus: true,
       planRenewsAt: true,
@@ -71,6 +77,8 @@ export default async function BillingPage() {
   const enrollmentState =
     getEnrollmentState({
       emailVerified: user.emailVerified,
+      englishGoal: user.profile?.englishGoal,
+      proficiencyLevel: user.profile?.proficiencyLevel,
       subscriptionStatus: status,
     });
 

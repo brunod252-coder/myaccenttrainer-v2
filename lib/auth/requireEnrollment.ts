@@ -27,6 +27,9 @@ export async function requireEnrollment() {
     where: {
       id: payload.userId,
     },
+    include: {
+      profile: true,
+    },
   });
 
   if (!user) {
@@ -35,6 +38,8 @@ export async function requireEnrollment() {
 
   const enrollmentState = getEnrollmentState({
     emailVerified: user.emailVerified,
+    englishGoal: user.profile?.englishGoal,
+    proficiencyLevel: user.profile?.proficiencyLevel,
     subscriptionStatus: user.subscriptionStatus,
     stripeCustomerId: user.stripeCustomerId,
     stripeSubscriptionId: user.stripeSubscriptionId,

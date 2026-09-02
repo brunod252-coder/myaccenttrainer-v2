@@ -37,6 +37,12 @@ export default async function WalletPage() {
       email: true,
       role: true,
       emailVerified: true,
+      profile: {
+        select: {
+          englishGoal: true,
+          proficiencyLevel: true,
+        },
+      },
     },
   });
 
@@ -53,6 +59,8 @@ export default async function WalletPage() {
   const enrollmentState =
     getEnrollmentState({
       emailVerified: user.emailVerified,
+      englishGoal: user.profile?.englishGoal,
+      proficiencyLevel: user.profile?.proficiencyLevel,
       subscriptionStatus,
     });
 

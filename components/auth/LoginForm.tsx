@@ -35,8 +35,65 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    if (data.user?.role === "ADMIN") {
+      router.push("/admin");
+      router.refresh();
+      return;
+    }
+
+    try {
+      const statusResponse = await fetch(
+        "/api/onboarding/status",
+        {
+          method: "GET",
+          cache: "no-store",
+        },
+      );
+
+      const status = await statusResponse.json();
+
+      if (!statusResponse.ok) {
+        router.push("/dashboard");
+        router.refresh();
+        return;
+      }
+
+      switch (status.enrollmentState) {
+        case "EMAIL_VERIFICATION_REQUIRED":
+          router.push("/verify-email");
+          break;
+
+        case "LEARNING_PROFILE_REQUIRED":
+          router.push("/onboarding/assessment");
+          break;
+
+        case "PLAN_SELECTION_REQUIRED":
+          router.push("/onboarding/plan");
+          break;
+
+        case "PAYMENT_METHOD_REQUIRED":
+          router.push("/onboarding/payment");
+          break;
+
+        case "PAST_DUE":
+        case "CANCELED":
+        case "EXPIRED":
+          router.push("/dashboard/billing");
+          break;
+
+        case "TRIALING":
+        case "ACTIVE":
+        case "CANCEL_SCHEDULED":
+        default:
+          router.push("/dashboard");
+          break;
+      }
+
+      router.refresh();
+    } catch {
+      router.push("/dashboard");
+      router.refresh();
+    }
   }
 
   return (

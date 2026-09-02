@@ -38,6 +38,12 @@ export async function GET() {
         stripeCustomerId: true,
         stripeSubscriptionId: true,
         planRenewsAt: true,
+        profile: {
+          select: {
+            englishGoal: true,
+            proficiencyLevel: true,
+          },
+        },
       },
     });
 
@@ -53,7 +59,14 @@ export async function GET() {
       );
     }
 
-    const enrollmentState = getEnrollmentState(user);
+    const enrollmentState = getEnrollmentState({
+      emailVerified: user.emailVerified,
+      englishGoal: user.profile?.englishGoal,
+      proficiencyLevel: user.profile?.proficiencyLevel,
+      subscriptionStatus: user.subscriptionStatus,
+      stripeCustomerId: user.stripeCustomerId,
+      stripeSubscriptionId: user.stripeSubscriptionId,
+    });
     const plan = user.selectedPlanId
       ? getPlan(user.selectedPlanId)
       : undefined;

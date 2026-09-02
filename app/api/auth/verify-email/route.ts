@@ -29,7 +29,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.redirect(
-      `${appUrl()}/onboarding/plan?verify=success`,
+      `${appUrl()}/onboarding/assessment?verify=success`,
     );
   } catch (error) {
     console.error(

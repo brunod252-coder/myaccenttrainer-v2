@@ -40,6 +40,12 @@ export default async function OnboardingPaymentPage() {
       emailVerified: true,
       selectedPlanId: true,
       subscriptionStatus: true,
+      profile: {
+        select: {
+          englishGoal: true,
+          proficiencyLevel: true,
+        },
+      },
     },
   });
 
@@ -50,6 +56,8 @@ export default async function OnboardingPaymentPage() {
   const enrollmentState =
     getEnrollmentState({
       emailVerified: user.emailVerified,
+      englishGoal: user.profile?.englishGoal,
+      proficiencyLevel: user.profile?.proficiencyLevel,
       subscriptionStatus:
         user.subscriptionStatus,
     });
@@ -102,7 +110,7 @@ export default async function OnboardingPaymentPage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
           <span>My Accent Trainer</span>
-          <span>Step 4 of 5</span>
+          <span>Step 5 of 6</span>
         </div>
 
         <section className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-xl shadow-slate-200/50">
@@ -122,7 +130,7 @@ export default async function OnboardingPaymentPage() {
                 will not be charged today.
               </p>
 
-              <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-5">
+              <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
                 <span className="font-semibold text-[#168c56]">
                   ✓ Account
                 </span>
@@ -130,12 +138,15 @@ export default async function OnboardingPaymentPage() {
                   ✓ Email
                 </span>
                 <span className="font-semibold text-[#168c56]">
-                  ✓ Plan
+                  ✓ Assessment
+                </span>
+                <span className="font-semibold text-[#168c56]">
+                  ✓ Membership
                 </span>
                 <span className="font-semibold text-[#17223b]">
-                  4. Payment
+                  5. Payment
                 </span>
-                <span>5. Trial</span>
+                <span>6. Trial</span>
               </div>
 
               <div className="mt-8 rounded-3xl border border-gray-100 p-6">
