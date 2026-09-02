@@ -92,7 +92,7 @@ export default async function OnboardingAssessmentPage() {
             <span className="font-semibold text-[#17223b]">
               3. Assessment
             </span>
-            <span>4. Plan</span>
+            <span>4. Membership</span>
             <span>5. Payment</span>
             <span>6. Trial</span>
           </div>
