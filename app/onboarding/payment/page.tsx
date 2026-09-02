@@ -114,8 +114,8 @@ export default async function OnboardingPaymentPage() {
         </div>
 
         <section className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-xl shadow-slate-200/50">
-          <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="p-7 md:p-10">
+          <div className="border-b border-gray-100 p-7 md:p-10">
+            <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
                 Complete your enrollment
               </p>
@@ -124,32 +124,36 @@ export default async function OnboardingPaymentPage() {
                 One last step, {firstName}.
               </h1>
 
-              <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600">
+              <p className="mt-4 text-base leading-7 text-gray-600">
                 Add a valid payment method to activate your two-day Premium
                 trial. You will receive full Premium access immediately and
                 will not be charged today.
               </p>
+            </div>
 
-              <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
-                <span className="font-semibold text-[#168c56]">
-                  ✓ Account
-                </span>
-                <span className="font-semibold text-[#168c56]">
-                  ✓ Email
-                </span>
-                <span className="font-semibold text-[#168c56]">
-                  ✓ Assessment
-                </span>
-                <span className="font-semibold text-[#168c56]">
-                  ✓ Membership
-                </span>
-                <span className="font-semibold text-[#17223b]">
-                  5. Payment
-                </span>
-                <span>6. Trial</span>
-              </div>
+            <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
+              <span className="font-semibold text-[#168c56]">
+                ✓ Account
+              </span>
+              <span className="font-semibold text-[#168c56]">
+                ✓ Email
+              </span>
+              <span className="font-semibold text-[#168c56]">
+                ✓ Assessment
+              </span>
+              <span className="font-semibold text-[#168c56]">
+                ✓ Membership
+              </span>
+              <span className="font-semibold text-[#17223b]">
+                5. Payment
+              </span>
+              <span>6. Trial</span>
+            </div>
+          </div>
 
-              <div className="mt-8 rounded-3xl border border-gray-100 p-6">
+          <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="p-7 md:p-10">
+              <div className="rounded-3xl border border-gray-100 p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-wider text-[#20ad68]">
