@@ -20,11 +20,14 @@ export default function CheckoutButton() {
 
       const data = (await response.json()) as {
         url?: string;
+        href?: string;
         message?: string;
         configured?: boolean;
       };
 
-      if (!response.ok || !data.url) {
+      const destination = data.url || data.href;
+
+      if (!response.ok || !destination) {
         setMessage(
           data.message ||
             "We could not start secure checkout. Please try again.",
@@ -32,11 +35,9 @@ export default function CheckoutButton() {
         return;
       }
 
-      window.location.assign(data.url);
+      window.location.assign(destination);
     } catch {
-      setMessage(
-        "We could not reach the payment service. Please try again.",
-      );
+      setMessage("We could not reach the payment service. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,9 +57,7 @@ export default function CheckoutButton() {
         disabled={loading}
         className="inline-flex w-full items-center justify-center rounded-xl bg-[#20ad68] px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading
-          ? "Opening secure checkout..."
-          : "Continue to Secure Checkout"}
+        {loading ? "Opening secure checkout..." : "Continue to Secure Checkout"}
       </button>
 
       <p className="mt-4 text-center text-xs leading-5 text-gray-500">

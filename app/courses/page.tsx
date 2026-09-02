@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import MarketingLayout from "@/components/layouts/MarketingLayout";
 import PageBanner from "@/components/marketing/PageBanner";
 import CourseGrid from "@/components/home/CourseGrid";
+import CourseDetails from "@/components/home/CourseDetails";
 import CallToAction from "@/components/home/CallToAction";
 
 export const metadata: Metadata = {
@@ -21,6 +22,8 @@ export default function CoursesPage() {
       />
 
       <CourseGrid />
+
+      <CourseDetails />
 
       <CallToAction />
     </MarketingLayout>

@@ -1,31 +1,26 @@
 import Container from "@/components/ui/Container";
 import Section from "@/components/ui/Section";
 import SectionHeader from "@/components/ui/SectionHeader";
-import TestimonialCard from "@/components/cards/TestimonialCard";
 
-const testimonials = [
+const benefits = [
   {
-    name: "Maria",
-    country: "Brazil",
-    quote: "The lessons made English pronunciation much easier to understand.",
+    number: "01",
+    title: "Hear the difference",
+    description:
+      "Use focused listening and pronunciation practice to recognize the sounds that shape clear American English.",
   },
   {
-    name: "Ahmed",
-    country: "Egypt",
-    quote: "I finally feel confident speaking English at work.",
+    number: "02",
+    title: "Practice with purpose",
+    description:
+      "Work through lessons at your own pace and return to difficult sounds whenever you need more practice.",
   },
   {
-    name: "Samuel",
-    country: "Cameroon",
-    quote:
-      "The Basic Lessons completely changed the way I pronounce English words.",
+    number: "03",
+    title: "See your progress",
+    description:
+      "Keep your learning organized as you complete lessons, practice pronunciation, and build confidence over time.",
   },
-];
-
-const stats = [
-  { value: "10,000+", label: "learners" },
-  { value: "120+", label: "countries" },
-  { value: "4.9/5", label: "average rating" },
 ];
 
 export default function Testimonials() {
@@ -33,29 +28,41 @@ export default function Testimonials() {
     <Section className="pt-0">
       <Container>
         <SectionHeader
-          eyebrow="Loved worldwide"
-          title="What our students say"
-          subtitle="Students from around the world have improved their confidence through MyAccentTrainer."
+          eyebrow="Built for real progress"
+          title="A clearer path to confident English"
+          subtitle="MyAccentTrainer combines structured lessons, focused practice, and progress tracking in one learning experience."
         />
 
         <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <TestimonialCard
-              key={testimonial.name}
-              name={testimonial.name}
-              country={testimonial.country}
-              quote={testimonial.quote}
-            />
+          {benefits.map((benefit) => (
+            <article
+              key={benefit.number}
+              className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e9f8f3] text-sm font-bold text-[#20ad68]">
+                {benefit.number}
+              </div>
+
+              <h3 className="mt-5 font-display text-xl text-[#17223b]">
+                {benefit.title}
+              </h3>
+
+              <p className="mt-3 text-sm leading-7 text-gray-600">
+                {benefit.description}
+              </p>
+            </article>
           ))}
         </div>
 
-        <div className="mt-10 grid gap-6 rounded-2xl border border-gray-100 bg-[#f6faf8] p-8 text-center sm:grid-cols-3">
-          {stats.map((stat) => (
-            <div key={stat.label}>
-              <p className="font-display text-3xl text-[#20ad68]">{stat.value}</p>
-              <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
-            </div>
-          ))}
+        <div className="mt-10 rounded-2xl border border-[#dcefe7] bg-[#f6faf8] px-6 py-7 text-center">
+          <p className="font-display text-xl text-[#17223b]">
+            Our pilot is where the real numbers begin.
+          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+            As learners use MyAccentTrainer, we will measure progress and publish
+            genuine learner experiences instead of placeholder testimonials or
+            unsupported statistics.
+          </p>
         </div>
       </Container>
     </Section>

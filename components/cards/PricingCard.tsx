@@ -3,61 +3,78 @@ import ButtonLink from "@/components/ui/ButtonLink";
 type PricingCardProps = {
   title: string;
   price: string;
+  period: string;
   description: string;
-  period?: string;
-  features?: string[];
+  features: string[];
   buttonText?: string;
+  buttonHref?: string;
+  badge?: string;
+  emphasisText?: string;
 };
 
 export default function PricingCard({
   title,
   price,
-  description,
   period,
-  features = [],
+  description,
+  features,
   buttonText = "Start free",
+  buttonHref = "/register",
+  badge,
+  emphasisText,
 }: PricingCardProps) {
   return (
-    <div className="relative mx-auto max-w-md rounded-3xl border-2 border-[#20ad68] bg-white p-10 shadow-lg transition hover:-translate-y-1 hover:shadow-xl">
-      <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#20ad68] px-3 py-1 text-xs font-semibold text-white">
-        Most popular
-      </span>
+    <article className="relative flex h-full flex-col rounded-2xl border border-[#20ad68] bg-white p-7 shadow-sm">
+      {badge ? (
+        <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#20ad68] px-3 py-1 text-xs font-semibold text-white">
+          {badge}
+        </div>
+      ) : null}
 
-      <h3 className="font-display text-xl text-[#168c56]">{title}</h3>
+      <div>
+        <p className="text-sm font-semibold text-[#168c56]">
+          {title}
+        </p>
 
-      <p className="mt-4">
-        <span className="font-display text-4xl font-semibold text-[#17223b]">
-          {price}
-        </span>
-        {period && <span className="text-sm text-gray-500">{period}</span>}
-      </p>
+        <div className="mt-3 flex items-end gap-1">
+          <span className="font-display text-4xl text-[#17223b]">
+            {price}
+          </span>
+          <span className="pb-1 text-sm text-gray-500">
+            {period}
+          </span>
+        </div>
 
-      <p className="mt-3 text-sm text-gray-600">{description}</p>
+        <p className="mt-2 text-sm leading-6 text-gray-600">
+          {description}
+        </p>
 
-      {features.length > 0 && (
-        <ul className="mt-6 space-y-3">
-          {features.map((feature) => (
-            <li key={feature} className="flex items-start gap-3 text-sm text-gray-700">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#20ad68"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="mt-0.5 h-4 w-4 shrink-0"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-              {feature}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-8">
-        <ButtonLink href="/register">{buttonText}</ButtonLink>
+        {emphasisText ? (
+          <p className="mt-3 text-sm font-semibold text-[#168c56]">
+            {emphasisText}
+          </p>
+        ) : null}
       </div>
-    </div>
+
+      <ul className="mt-6 space-y-3 text-sm text-gray-700">
+        {features.map((feature) => (
+          <li
+            key={feature}
+            className="flex items-start gap-3"
+          >
+            <span className="mt-0.5 text-[#20ad68]">
+              ✓
+            </span>
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-auto pt-7">
+        <ButtonLink href={buttonHref}>
+          {buttonText}
+        </ButtonLink>
+      </div>
+    </article>
   );
 }

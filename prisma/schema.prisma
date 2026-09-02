@@ -14,17 +14,18 @@ model User {
   lastName     String?
   role         UserRole @default(STUDENT)
 
-  profile       UserProfile?
-  wallet        WalletAccount?
-  enrollments   Enrollment[]
-  progress      LessonProgress[]
-  referralsSent ReferralInvite[]       @relation("ReferralInviter")
-  attempts      PronunciationAttempt[]
-  bookmarks     LessonBookmark[]
-  recordings    VoiceRecording[]
-  authTokens    VerificationToken[]
-  coachingGoal  CoachingGoal?
-  notifications Notification[]
+  profile         UserProfile?
+  wallet          WalletAccount?
+  enrollments     Enrollment[]
+  progress        LessonProgress[]
+  referralsSent   ReferralInvite[]       @relation("ReferralInviter")
+  attempts        PronunciationAttempt[]
+  bookmarks       LessonBookmark[]
+  recordings      VoiceRecording[]
+  authTokens      VerificationToken[]
+  coachingGoal    CoachingGoal?
+  notifications   Notification[]
+  checkoutAttempt CheckoutAttempt?
 
   emailVerified   Boolean   @default(false)
   emailVerifiedAt DateTime?
@@ -38,6 +39,26 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CheckoutAttempt {
+  id         String @id @default(cuid())
+  userId     String @unique
+  attemptKey String @unique
+
+  status String @default("CREATING")
+
+  stripeCheckoutSessionId String?   @unique
+  stripeCheckoutUrl       String?
+  expiresAt               DateTime?
+  lastError               String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, updatedAt])
 }
 
 model UserProfile {

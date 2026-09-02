@@ -2,8 +2,22 @@ import Link from "next/link";
 
 import Container from "@/components/ui/Container";
 import Section from "@/components/ui/Section";
+import {
+  getMarketingCtaLabel,
+  getMarketingDestination,
+  getMarketingSessionUser,
+} from "@/lib/auth/marketing-session";
 
-export default function CallToAction() {
+export default async function CallToAction() {
+  const user =
+    await getMarketingSessionUser();
+
+  const primaryHref =
+    getMarketingDestination(user);
+
+  const primaryLabel =
+    getMarketingCtaLabel(user);
+
   return (
     <Section>
       <Container>
@@ -22,10 +36,10 @@ export default function CallToAction() {
 
             <div className="mt-8">
               <Link
-                href="/register"
+                href={primaryHref}
                 className="inline-flex items-center justify-center rounded-lg bg-white px-7 py-3 text-sm font-semibold text-[#168c56] shadow-sm transition hover:-translate-y-0.5 hover:shadow"
               >
-                Start free assessment
+                {primaryLabel}
               </Link>
             </div>
           </div>
