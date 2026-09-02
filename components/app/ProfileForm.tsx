@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LEARNING_MISSIONS } from "@/lib/learning/mission";
 
 type Initial = {
   firstName: string;
@@ -14,12 +15,12 @@ type Initial = {
 
 const LANGUAGES = ["French", "Spanish", "Mandarin", "Hindi", "Arabic", "Portuguese", "Korean", "Vietnamese", "Other"];
 const GOALS = [
-  "University interviews",
-  "Seminars & presentations",
-  "Class participation",
-  "IELTS / TOEFL speaking",
-  "Career & professional",
-  "Everyday conversation",
+  LEARNING_MISSIONS.INTERVIEWS,
+  LEARNING_MISSIONS.PRESENTATIONS,
+  LEARNING_MISSIONS.ACADEMIC,
+  LEARNING_MISSIONS.TOEFL_IELTS,
+  LEARNING_MISSIONS.PROFESSIONAL,
+  LEARNING_MISSIONS.EVERYDAY_CONVERSATION,
 ];
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 

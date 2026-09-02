@@ -1,3 +1,5 @@
+import { LEARNING_MISSIONS } from "@/lib/learning/mission";
+
 export type LearningRecommendation = {
   eyebrow: string;
   title: string;
@@ -10,7 +12,7 @@ const GOAL_RECOMMENDATIONS: Record<
   string,
   Omit<LearningRecommendation, "firstFocus">
 > = {
-  "Everyday conversation": {
+  [LEARNING_MISSIONS.EVERYDAY_CONVERSATION]: {
     eyebrow: "Everyday Conversation",
     title: "Build confidence for real conversations.",
     summary:
@@ -22,7 +24,7 @@ const GOAL_RECOMMENDATIONS: Record<
     ],
   },
 
-  "IELTS / TOEFL speaking": {
+  [LEARNING_MISSIONS.TOEFL_IELTS]: {
     eyebrow: "TOEFL / IELTS Speaking",
     title: "Train for clear, organized test-day speaking.",
     summary:
@@ -34,7 +36,7 @@ const GOAL_RECOMMENDATIONS: Record<
     ],
   },
 
-  "University interviews": {
+  [LEARNING_MISSIONS.INTERVIEWS]: {
     eyebrow: "Interview Preparation",
     title: "Prepare to sound confident when the stakes are high.",
     summary:
@@ -46,7 +48,7 @@ const GOAL_RECOMMENDATIONS: Record<
     ],
   },
 
-  "Career & professional": {
+  [LEARNING_MISSIONS.PROFESSIONAL]: {
     eyebrow: "Professional English",
     title: "Strengthen the English you use at work.",
     summary:
@@ -58,7 +60,7 @@ const GOAL_RECOMMENDATIONS: Record<
     ],
   },
 
-  "Seminars & presentations": {
+  [LEARNING_MISSIONS.PRESENTATIONS]: {
     eyebrow: "Presentations & Public Speaking",
     title: "Make your spoken English easier to follow.",
     summary:
@@ -70,7 +72,7 @@ const GOAL_RECOMMENDATIONS: Record<
     ],
   },
 
-  "Class participation": {
+  [LEARNING_MISSIONS.ACADEMIC]: {
     eyebrow: "Academic English",
     title: "Participate more confidently in academic settings.",
     summary:

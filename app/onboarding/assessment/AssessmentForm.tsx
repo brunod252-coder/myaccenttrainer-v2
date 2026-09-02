@@ -3,39 +3,41 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { LEARNING_MISSIONS } from "@/lib/learning/mission";
+
 const GOALS = [
   {
-    value: "Everyday conversation",
+    value: LEARNING_MISSIONS.EVERYDAY_CONVERSATION,
     title: "Everyday Conversation",
     description:
       "Speak more naturally and confidently in daily life, family conversations, errands, and social situations.",
   },
   {
-    value: "IELTS / TOEFL speaking",
+    value: LEARNING_MISSIONS.TOEFL_IELTS,
     title: "TOEFL / IELTS Speaking",
     description:
       "Build the clarity, fluency, and speaking confidence needed for an English proficiency exam.",
   },
   {
-    value: "University interviews",
+    value: LEARNING_MISSIONS.INTERVIEWS,
     title: "Job & University Interviews",
     description:
       "Prepare to answer questions clearly, confidently, and professionally in high-stakes interviews.",
   },
   {
-    value: "Career & professional",
+    value: LEARNING_MISSIONS.PROFESSIONAL,
     title: "Career & Professional English",
     description:
       "Communicate more effectively at work, in meetings, with customers, and with colleagues.",
   },
   {
-    value: "Seminars & presentations",
+    value: LEARNING_MISSIONS.PRESENTATIONS,
     title: "Presentations & Public Speaking",
     description:
       "Speak with greater clarity and confidence when presenting ideas to groups.",
   },
   {
-    value: "Class participation",
+    value: LEARNING_MISSIONS.ACADEMIC,
     title: "Academic / Classroom English",
     description:
       "Participate more comfortably in classes, discussions, seminars, and academic conversations.",
