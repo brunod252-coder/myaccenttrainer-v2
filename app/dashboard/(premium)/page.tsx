@@ -9,6 +9,7 @@ import ClarityGauge from "@/components/app/ClarityGauge";
 import { CheckCircle, Flame, Book, Clock, Mic, Arrow, Sparkle } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import {
+  getLearningPath,
   getLearningProfile,
   getMissionLessonRecommendations,
 } from "@/lib/learning";
@@ -57,22 +58,20 @@ export default async function DashboardPage() {
 
   const [
     completedLessons,
-    enrolledCourses,
-    publishedCourses,
     stats,
     completedSlugs,
     allLessons,
     learningProfile,
+    learningPath,
   ] = await Promise.all([
     prisma.lessonProgress.count({
       where: { userId: payload.userId, status: "COMPLETED" },
     }),
-    prisma.enrollment.count({ where: { userId: payload.userId } }),
-    prisma.course.count({ where: { isPublished: true } }),
     getClarityStats(payload.userId),
     getCompletedSlugs(payload.userId),
     getMergedLessons(),
     getLearningProfile(payload.userId),
+    getLearningPath(payload.userId),
   ]);
 
   const bySlug = new Map(
@@ -109,7 +108,6 @@ export default async function DashboardPage() {
 
   const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
   const firstName = user.firstName || "there";
-  const coursesValue = enrolledCourses > 0 ? enrolledCourses : publishedCourses;
 
   return (
     <AppLayout userName={userName} role={user.role}>
@@ -152,8 +150,8 @@ export default async function DashboardPage() {
           iconColor="#52719f"
         />
         <StatTile
-          label={enrolledCourses > 0 ? "Courses enrolled" : "Courses available"}
-          value={String(coursesValue)}
+          label="Courses available"
+          value={String(learningPath.courses.length)}
           icon={<Clock className="h-5 w-5" />}
           iconBg="#e5f3ec"
           iconColor="#2e7d5b"
