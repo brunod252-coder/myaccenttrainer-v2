@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_URL ||
+    "https://myaccenttrainer.com";
+
   const response = NextResponse.redirect(
-    new URL("/", request.url),
+    new URL("/", appUrl),
     303,
   );
 
