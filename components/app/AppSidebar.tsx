@@ -150,16 +150,17 @@ export default function AppSidebar({ userName, role }: Props) {
             )}
           </div>
 
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              aria-label="Log out"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              <Logout className="h-[18px] w-[18px]" />
-            </button>
-          </form>
         </div>
+
+        <form action="/api/auth/logout" method="post" className="mt-3">
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white"
+          >
+            <Logout className="h-[18px] w-[18px]" />
+            Log out
+          </button>
+        </form>
       </div>
     </aside>
   );
