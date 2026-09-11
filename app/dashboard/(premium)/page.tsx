@@ -8,8 +8,12 @@ import VerifyBanner from "@/components/app/VerifyBanner";
 import ClarityGauge from "@/components/app/ClarityGauge";
 import { CheckCircle, Flame, Book, Clock, Mic, Arrow, Sparkle } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
+import {
+  getLearningProfile,
+  getMissionLessonRecommendations,
+} from "@/lib/learning";
 import { prisma } from "@/lib/prisma";
-import { getMergedLessons } from "@/lib/lessons";
+import { getMergedLessons, type Lesson } from "@/lib/lessons";
 import { getClarityStats } from "@/lib/pronunciation/attempts";
 
 const WEEK = [30, 55, 0, 40, 70, 25, 50];
@@ -51,19 +55,57 @@ export default async function DashboardPage() {
     emailVerified = true;
   }
 
-  const [completedLessons, enrolledCourses, publishedCourses, stats, completedSlugs] =
-    await Promise.all([
-      prisma.lessonProgress.count({ where: { userId: payload.userId, status: "COMPLETED" } }),
-      prisma.enrollment.count({ where: { userId: payload.userId } }),
-      prisma.course.count({ where: { isPublished: true } }),
-      getClarityStats(payload.userId),
-      getCompletedSlugs(payload.userId),
-    ]);
+  const [
+    completedLessons,
+    enrolledCourses,
+    publishedCourses,
+    stats,
+    completedSlugs,
+    allLessons,
+    learningProfile,
+  ] = await Promise.all([
+    prisma.lessonProgress.count({
+      where: { userId: payload.userId, status: "COMPLETED" },
+    }),
+    prisma.enrollment.count({ where: { userId: payload.userId } }),
+    prisma.course.count({ where: { isPublished: true } }),
+    getClarityStats(payload.userId),
+    getCompletedSlugs(payload.userId),
+    getMergedLessons(),
+    getLearningProfile(payload.userId),
+  ]);
 
-  const allLessons = await getMergedLessons();
+  const bySlug = new Map(
+    allLessons.map((lesson) => [lesson.slug, lesson]),
+  );
+
+  const missionRecommendations = getMissionLessonRecommendations(
+    learningProfile.mission,
+    3,
+  );
+
+  const missionRecommendedLessons = missionRecommendations
+    .map((recommendation) => bySlug.get(recommendation.slug))
+    .filter((lesson): lesson is Lesson => Boolean(lesson));
+
+  const missionNextLesson = missionRecommendedLessons.find(
+    (lesson) => !completedSlugs.has(lesson.slug),
+  );
+
+  const catalogNextLesson =
+    allLessons.find(
+      (lesson) => !completedSlugs.has(lesson.slug),
+    ) ?? allLessons[allLessons.length - 1];
+
   const nextLesson =
-    allLessons.find((l) => !completedSlugs.has(l.slug)) ?? allLessons[allLessons.length - 1];
-  const allDone = completedSlugs.size >= allLessons.length && allLessons.length > 0;
+    missionNextLesson ?? catalogNextLesson;
+
+  const nextLessonIsMissionRecommended =
+    Boolean(missionNextLesson);
+
+  const allDone =
+    completedSlugs.size >= allLessons.length &&
+    allLessons.length > 0;
 
   const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
   const firstName = user.firstName || "there";
@@ -73,10 +115,17 @@ export default async function DashboardPage() {
     <AppLayout userName={userName} role={user.role}>
       <VerifyBanner verified={emailVerified} />
       <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">Your workspace</p>
-        <h1 className="mt-1 font-display text-3xl text-[#17223b]">Welcome back, {firstName} 👋</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Practice a little every day — Nina will help you sound clearer with each session.
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">
+          Your learning plan
+        </p>
+        <h1 className="mt-1 font-display text-3xl text-[#17223b]">
+          Welcome back, {firstName} 👋
+        </h1>
+        <p className="mt-1 text-sm font-medium text-[#52719f]">
+          {learningProfile.level} · {learningProfile.mission.label}
+        </p>
+        <p className="mt-1 max-w-3xl text-sm text-gray-500">
+          {learningProfile.mission.description}
         </p>
       </div>
 
@@ -116,7 +165,11 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg text-[#17223b]">Continue your path</h2>
             <span className="rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">
-              {allDone ? "All caught up" : "Recommended"}
+              {allDone
+                ? "All caught up"
+                : nextLessonIsMissionRecommended
+                  ? "Nina recommends"
+                  : "Next lesson"}
             </span>
           </div>
 
@@ -185,23 +238,41 @@ export default async function DashboardPage() {
           </div>
 
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="font-display text-lg text-[#17223b]">Focus sounds</h2>
-            <p className="mt-1 text-sm text-gray-500">The sounds we&apos;ll work on first.</p>
+            <h2 className="font-display text-lg text-[#17223b]">
+              Your starting priorities
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Nina is prioritizing these pronunciation lessons for your{" "}
+              {learningProfile.mission.shortLabel} goal.
+            </p>
+
             <div className="mt-4 space-y-3">
-              {[
-                { sym: "r", word: "red, around", color: "#d1495b" },
-                { sym: "l", word: "light, really", color: "#c98a2b" },
-                { sym: "θ", word: "think, three", color: "#20ad68" },
-              ].map((s) => (
-                <div key={s.sym} className="flex items-center gap-3">
-                  <div
-                    className="flex h-9 w-11 items-center justify-center rounded-lg font-semibold"
-                    style={{ background: `${s.color}18`, color: s.color }}
-                  >
-                    {s.sym}
+              {missionRecommendedLessons.map((lesson, index) => (
+                <Link
+                  key={lesson.slug}
+                  href={`/dashboard/lesson/${lesson.slug}`}
+                  className="flex items-center gap-3 rounded-xl border border-transparent p-2 transition hover:border-[#d7f2e7] hover:bg-[#f6faf8]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e9f8f3] text-sm font-semibold text-[#168c56]">
+                    {index + 1}
                   </div>
-                  <div className="text-sm text-gray-600">{s.word}</div>
-                </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#17223b]">
+                      {lesson.subtitle}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {completedSlugs.has(lesson.slug)
+                        ? "Completed"
+                        : lesson.slug === nextLesson.slug &&
+                            nextLessonIsMissionRecommended
+                          ? "Recommended next"
+                          : "In your learning plan"}
+                    </p>
+                  </div>
+
+                  <Arrow className="h-4 w-4 shrink-0 text-[#20ad68]" />
+                </Link>
               ))}
             </div>
           </div>
