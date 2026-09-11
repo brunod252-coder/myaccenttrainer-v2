@@ -1,36 +1,89 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import { getPublishedCurriculumLessonById } from "@/lib/curriculum";
 import { verifyAuthToken } from "@/lib/jwt";
+import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-// POST /api/lessons/complete  { slug: string }
-// Marks a lesson complete for the signed-in user. No-ops gracefully if the
-// lesson isn't in the database yet (run /api/dev/seed once after db push).
+// POST /api/lessons/complete  { lessonId: string }
+// Marks one real published curriculum lesson complete for the signed-in user.
 export async function POST(req: Request) {
   try {
     const token = (await cookies()).get("mat_session")?.value;
-    if (!token) return NextResponse.json({ ok: false }, { status: 401 });
+
+    if (!token) {
+      return NextResponse.json(
+        { ok: false },
+        { status: 401 },
+      );
+    }
+
     const { userId } = verifyAuthToken(token);
 
-    const body = (await req.json().catch(() => ({}))) as { slug?: string };
-    const slug = String(body.slug ?? "");
-    if (!slug) return NextResponse.json({ ok: false });
+    const body = (await req.json().catch(() => ({}))) as {
+      lessonId?: string;
+    };
 
-    const lesson = await prisma.lesson.findFirst({ where: { slug } });
-    if (!lesson) return NextResponse.json({ ok: true, recorded: false });
+    const lessonId = String(body.lessonId ?? "").trim();
+
+    if (!lessonId) {
+      return NextResponse.json(
+        { ok: false },
+        { status: 400 },
+      );
+    }
+
+    const lesson =
+      await getPublishedCurriculumLessonById(
+        lessonId,
+      );
+
+    if (!lesson) {
+      return NextResponse.json(
+        {
+          ok: false,
+          recorded: false,
+        },
+        { status: 404 },
+      );
+    }
+
+    const completedAt = new Date();
 
     await prisma.lessonProgress.upsert({
-      where: { userId_lessonId: { userId, lessonId: lesson.id } },
-      update: { status: "COMPLETED", completedAt: new Date() },
-      create: { userId, lessonId: lesson.id, status: "COMPLETED", completedAt: new Date() },
+      where: {
+        userId_lessonId: {
+          userId,
+          lessonId: lesson.id,
+        },
+      },
+      update: {
+        status: "COMPLETED",
+        completedAt,
+      },
+      create: {
+        userId,
+        lessonId: lesson.id,
+        status: "COMPLETED",
+        completedAt,
+      },
     });
 
-    return NextResponse.json({ ok: true, recorded: true });
+    return NextResponse.json({
+      ok: true,
+      recorded: true,
+    });
   } catch (error) {
-    console.error("LESSON_COMPLETE_ERROR", error);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    console.error(
+      "LESSON_COMPLETE_ERROR",
+      error,
+    );
+
+    return NextResponse.json(
+      { ok: false },
+      { status: 500 },
+    );
   }
 }

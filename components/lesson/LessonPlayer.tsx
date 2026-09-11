@@ -9,9 +9,13 @@ import type { PronunciationResult } from "@/lib/pronunciation/types";
 
 type LessonPlayerProps = {
   lesson: Lesson;
+  lessonId: string;
 };
 
-export default function LessonPlayer({ lesson }: LessonPlayerProps) {
+export default function LessonPlayer({
+  lesson,
+  lessonId,
+}: LessonPlayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState<PronunciationResult | null>(null);
   const completedRef = useRef(false);
@@ -28,10 +32,10 @@ export default function LessonPlayer({ lesson }: LessonPlayerProps) {
       fetch("/api/lessons/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: lesson.slug }),
+        body: JSON.stringify({ lessonId }),
       }).catch(() => {});
     }
-  }, [currentSection?.type, lesson.slug]);
+  }, [currentSection?.type, lessonId]);
 
   function advanceLesson() {
     if (currentIndex < lesson.sections.length - 1) {

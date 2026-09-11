@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
 import LessonPlayer from "@/components/lesson/LessonPlayer";
+import { getPublishedCurriculumLessonBySlug } from "@/lib/curriculum";
 import { verifyAuthToken } from "@/lib/jwt";
 import { getMergedLesson } from "@/lib/lessons";
 import { prisma } from "@/lib/prisma";
@@ -26,8 +27,14 @@ export default async function LessonPage({
   });
   if (!user) redirect("/login");
 
-  const lesson = await getMergedLesson(id);
-  if (!lesson) redirect("/dashboard/practice");
+  const [lesson, curriculumLesson] = await Promise.all([
+    getMergedLesson(id),
+    getPublishedCurriculumLessonBySlug(id),
+  ]);
+
+  if (!lesson || !curriculumLesson) {
+    redirect("/dashboard/practice");
+  }
 
   const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
@@ -52,7 +59,10 @@ export default async function LessonPage({
           </div>
         </div>
 
-        <LessonPlayer lesson={lesson} />
+        <LessonPlayer
+          lesson={lesson}
+          lessonId={curriculumLesson.id}
+        />
       </div>
     </AppLayout>
   );
