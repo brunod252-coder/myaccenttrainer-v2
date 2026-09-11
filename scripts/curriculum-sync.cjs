@@ -32,14 +32,58 @@ function fail(message) {
   process.exit(1);
 }
 
-if (mode !== "preview") {
+if (
+  mode !== "preview" &&
+  mode !== "execute"
+) {
   fail(
-    [
-      `Unsupported mode "${mode}".`,
-      "This runner is preview-only.",
-      "Production execution has not been enabled.",
-    ].join(" "),
+    `Unsupported mode "${mode}". Use preview or execute.`,
   );
+}
+
+const confirmationArgument =
+  process.argv.find(
+    (argument) =>
+      argument.startsWith("--confirm="),
+  );
+
+const confirmation =
+  confirmationArgument?.slice(
+    "--confirm=".length,
+  );
+
+const EXECUTION_CONFIRMATION =
+  "SYNC_CORE_CURRICULUM";
+
+const EXECUTION_ENVIRONMENT_VALUE =
+  "YES";
+
+if (mode === "execute") {
+  if (
+    process.env.ALLOW_PRODUCTION_CURRICULUM_SYNC !==
+    EXECUTION_ENVIRONMENT_VALUE
+  ) {
+    fail(
+      [
+        "Production curriculum synchronization is locked.",
+        "Set ALLOW_PRODUCTION_CURRICULUM_SYNC=YES",
+        "only for a deliberate synchronization run.",
+      ].join(" "),
+    );
+  }
+
+  if (
+    confirmation !==
+    EXECUTION_CONFIRMATION
+  ) {
+    fail(
+      [
+        "Explicit confirmation missing.",
+        "Required:",
+        "--confirm=SYNC_CORE_CURRICULUM",
+      ].join(" "),
+    );
+  }
 }
 
 const jiti = createJiti(__filename, {
@@ -113,6 +157,54 @@ const previewLessons = lessons.map(
     };
   },
 );
+
+if (mode === "execute") {
+  console.log(
+    "============================================================",
+  );
+  console.log(
+    " MYACCENTTRAINER — CORE CURRICULUM SYNCHRONIZATION",
+  );
+  console.log(
+    "============================================================",
+  );
+  console.log();
+  console.log("MODE:           EXECUTE");
+  console.log("DATABASE WRITE: ENABLED");
+  console.log("DELETIONS:      NONE");
+  console.log();
+  console.log(
+    "Explicit production gate accepted.",
+  );
+  console.log(
+    "Invoking canonical syncCoreCurriculum()...",
+  );
+  console.log();
+
+  syncCoreCurriculum()
+    .then((result) => {
+      console.log(
+        JSON.stringify(
+          result,
+          null,
+          2,
+        ),
+      );
+      console.log();
+      console.log(
+        "Canonical curriculum synchronization complete.",
+      );
+    })
+    .catch((error) => {
+      console.error(
+        "ERROR: Curriculum synchronization failed.",
+      );
+      console.error(error);
+      process.exitCode = 1;
+    });
+
+  return;
+}
 
 const preview = {
   mode: "preview",

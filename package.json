@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "setup": "prisma db push",
-    "curriculum:preview": "node scripts/curriculum-sync.cjs preview"
+    "curriculum:preview": "node scripts/curriculum-sync.cjs preview",
+    "curriculum:execute": "node scripts/curriculum-sync.cjs execute"
   },
   "dependencies": {
     "@aws-sdk/client-sesv2": "^3.1090.0",
