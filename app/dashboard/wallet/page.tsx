@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import PlanTiers from "@/components/app/PlanTiers";
 import RedeemPromo from "@/components/app/RedeemPromo";
 import SendCreditForm from "@/components/app/SendCreditForm";
 import AppLayout from "@/components/layouts/AppLayout";
@@ -56,183 +55,229 @@ export default async function WalletPage() {
   ]);
 
   const currency = wallet.currency;
-  const enrollmentState =
-    getEnrollmentState({
-      emailVerified: user.emailVerified,
-      englishGoal: user.profile?.englishGoal,
-      proficiencyLevel: user.profile?.proficiencyLevel,
-      subscriptionStatus,
-    });
 
-  const isActive =
-    hasPremiumAccess(enrollmentState);
+  const enrollmentState = getEnrollmentState({
+    emailVerified: user.emailVerified,
+    englishGoal: user.profile?.englishGoal,
+    proficiencyLevel: user.profile?.proficiencyLevel,
+    subscriptionStatus,
+  });
+
+  const isActive = hasPremiumAccess(enrollmentState);
 
   const userName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email;
 
   return (
     <AppLayout userName={userName} role={user.role}>
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">
-          Wallet
-        </p>
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+          <div className="grid lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="p-6 sm:p-8">
+              <p className="mat-eyebrow">Wallet</p>
 
-        <h1 className="mt-1 font-display text-3xl text-[#17223b]">
-          Your learning credit
-        </h1>
+              <h1 className="mt-2 max-w-2xl font-display text-3xl text-[var(--mat-ink)] sm:text-4xl">
+                Your learning credit
+              </h1>
 
-        <p className="mt-1 text-sm text-gray-500">
-          Earn, receive, send, and apply credit throughout My Accent Trainer.
-        </p>
-      </div>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--mat-muted)] sm:text-base">
+                See the credit available on your account, send credit to
+                another registered learner, redeem eligible promo codes, and
+                review the transactions recorded in your wallet.
+              </p>
 
-      <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        <div className="space-y-5">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#20ad68] via-[#178a57] to-[#142b4c] p-7 text-white shadow-md">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/10" />
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/dashboard/wallet/ledger"
+                  className="mat-button mat-button-primary"
+                >
+                  View full ledger
+                  <Arrow className="h-4 w-4" />
+                </Link>
 
-            <p className="relative text-sm text-white/80">Available balance</p>
-
-            <p className="relative mt-1 font-display text-5xl">
-              {formatMoney(wallet.balanceMinor, currency)}
-            </p>
-
-            <div className="relative mt-5 flex flex-wrap gap-3">
-              <Link
-                href="/dashboard/wallet/ledger"
-                className="inline-flex items-center gap-1 rounded-xl bg-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-              >
-                Full ledger
-                <Arrow className="h-4 w-4" />
-              </Link>
+                <Link
+                  href="/dashboard/referrals"
+                  className="mat-button mat-button-secondary"
+                >
+                  Referral credits
+                </Link>
+              </div>
             </div>
 
-            <p className="relative mt-4 text-xs text-white/70">
-              Credit can be transferred to other registered users or applied to
-              eligible services.
-            </p>
+            <div className="border-t border-[var(--mat-border)] bg-[var(--mat-green-50)] p-6 sm:p-8 lg:border-l lg:border-t-0">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--mat-green-700)]">
+                Available balance
+              </p>
+
+              <p className="mt-3 font-display text-4xl text-[var(--mat-ink)] sm:text-5xl">
+                {formatMoney(wallet.balanceMinor, currency)}
+              </p>
+
+              <p className="mt-3 text-sm leading-6 text-[var(--mat-muted)]">
+                Balance calculated from the transactions recorded in your
+                wallet.
+              </p>
+
+              <div className="mt-5 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-white/80 p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                  Membership
+                </p>
+
+                <p className="mt-1 text-sm font-semibold text-[var(--mat-ink)]">
+                  {isActive
+                    ? "Premium access is active"
+                    : "No active Premium access"}
+                </p>
+
+                <Link
+                  href="/dashboard/billing"
+                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[var(--mat-green-700)] hover:underline"
+                >
+                  Open Billing
+                  <Arrow className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-6">
+            <SendCreditForm
+              balanceMinor={wallet.balanceMinor}
+              currencyCode={currency}
+            />
+
+            <RedeemPromo />
           </div>
 
-          <SendCreditForm
-            balanceMinor={wallet.balanceMinor}
-            currencyCode={currency}
-          />
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="mat-eyebrow">Wallet history</p>
 
-          <RedeemPromo />
+                <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                  Recent activity
+                </h2>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg text-[#17223b]">
-                Recent activity
-              </h2>
+                <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+                  Your eight most recent wallet transactions appear here.
+                </p>
+              </div>
 
               <Link
                 href="/dashboard/wallet/ledger"
-                className="inline-flex items-center gap-1 text-sm font-semibold text-[#168c56] hover:underline"
+                className="shrink-0 text-sm font-semibold text-[var(--mat-green-700)] hover:underline"
               >
                 Full ledger
-                <Arrow className="h-4 w-4" />
               </Link>
             </div>
 
             {wallet.transactions.length === 0 ? (
-              <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-[#f8fbfa] p-6 text-center text-sm text-gray-500">
-                No transactions yet. Redeem a promo code, invite a friend, or
-                receive credit from another user.
+              <div className="mt-6 rounded-[var(--mat-radius-lg)] border border-dashed border-[var(--mat-border-strong)] bg-[var(--mat-surface-soft)] p-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--mat-green-50)] text-[var(--mat-green-700)]">
+                  <Gift className="h-4 w-4" />
+                </div>
+
+                <p className="mt-4 font-semibold text-[var(--mat-ink)]">
+                  No wallet activity yet
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                  Transactions will appear here after credit is added, received,
+                  sent, redeemed, or applied.
+                </p>
               </div>
             ) : (
-              <div className="mt-4 divide-y divide-gray-100">
+              <div className="mt-5 divide-y divide-[var(--mat-border)]">
                 {wallet.transactions.map((transaction) => {
                   const meta = txnMeta(transaction.type);
+                  const positive = transaction.amountMinor >= 0;
 
                   return (
                     <div
                       key={transaction.id}
-                      className="flex items-center gap-3 py-3"
+                      className="flex items-center gap-3 py-4"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e9f8f3] text-[#20ad68]">
+                      <div
+                        className={
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--mat-radius-lg)] " +
+                          (positive
+                            ? "bg-[var(--mat-green-50)] text-[var(--mat-green-700)]"
+                            : "bg-[var(--mat-surface-soft)] text-[var(--mat-muted)]")
+                        }
+                      >
                         <Gift className="h-4 w-4" />
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-[#17223b]">
+                        <p className="truncate text-sm font-semibold text-[var(--mat-ink)]">
                           {transaction.description || meta.label}
                         </p>
 
-                        <p className="text-xs text-gray-400">
+                        <p className="mt-1 text-xs text-[var(--mat-muted-light)]">
                           {new Date(transaction.createdAt).toLocaleDateString()}
                         </p>
                       </div>
 
-                      <div
+                      <p
                         className={
-                          "text-sm font-semibold " +
-                          (transaction.amountMinor >= 0
-                            ? "text-[#2e7d5b]"
-                            : "text-[#c05b5b]")
+                          "shrink-0 text-sm font-bold " +
+                          (positive
+                            ? "text-[var(--mat-green-700)]"
+                            : "text-[var(--mat-ink)]")
                         }
                       >
-                        {transaction.amountMinor >= 0 ? "+" : "−"}
+                        {positive ? "+" : "−"}
                         {formatMoney(
                           Math.abs(transaction.amountMinor),
                           transaction.currencyCode || currency,
                         )}
-                      </div>
+                      </p>
                     </div>
                   );
                 })}
               </div>
             )}
-          </div>
+          </section>
         </div>
 
-        <div className="space-y-5">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg text-[#17223b]">
-                Choose your plan
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-6 sm:p-7">
+          <div className="grid gap-5 md:grid-cols-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                One transaction
+              </p>
+
+              <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+                Transfer protection
               </h2>
-
-              <Link
-                href="/dashboard/billing"
-                className="text-sm font-semibold text-[#168c56] hover:underline"
-              >
-                Billing
-              </Link>
             </div>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Unlimited lessons, Nina feedback, and certificates.
-            </p>
+            <div className="text-sm leading-6 text-[var(--mat-muted)]">
+              <p className="font-semibold text-[var(--mat-ink)]">
+                Both ledger entries are created together.
+              </p>
 
-            <div className="mt-5">
-              <PlanTiers isActive={isActive} />
+              <p className="mt-1">
+                Sender and recipient entries are written inside one database
+                transaction, so a completed transfer does not leave only one
+                side recorded.
+              </p>
             </div>
-          </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="font-display text-lg text-[#17223b]">
-              Transfer protection
-            </h2>
-
-            <div className="mt-4 space-y-3 text-sm leading-6 text-gray-500">
-              <p>
-                Sender and recipient entries are created together in one
-                database transaction.
+            <div className="text-sm leading-6 text-[var(--mat-muted)]">
+              <p className="font-semibold text-[var(--mat-ink)]">
+                One shared transfer reference.
               </p>
 
-              <p>
-                A transfer never partially completes: either both wallets
-                update, or neither wallet changes.
-              </p>
-
-              <p>
-                Each transfer receives a shared reference that appears in both
-                account ledgers.
+              <p className="mt-1">
+                The same transfer reference is recorded with the linked sender
+                and recipient ledger entries.
               </p>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </AppLayout>
   );
