@@ -118,7 +118,7 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
     }
   } else {
     if (brain.weakest) {
-      const e = exFor(brain.weakest.focus, `Your biggest opportunity right now (${brain.weakest.avg} avg). A focused set here lifts clarity most.`);
+      const e = exFor(brain.weakest.focus, `This is your lowest-scoring focus right now (${brain.weakest.avg} avg), so Nina is prioritizing it for practice.`);
       if (e) exercises.push(e);
     }
     // next-lowest rated sounds
@@ -188,7 +188,7 @@ export async function getCoachingPlan(userId: string): Promise<CoachingPlan> {
 
 function pickMotivation(streak: number, goalMet: boolean, practicedToday: boolean, hasData: boolean): string {
   if (!hasData) return "Every clear speaker started with a first recording. Today's the day — I'm right here with you.";
-  if (goalMet) return "You've hit your weekly goal — that consistency is exactly how accents change. Proud of you.";
+  if (goalMet) return "You've hit your weekly practice goal. Your target for this week is complete.";
   if (practicedToday) return "Lovely work today. Even a few minutes keeps the momentum alive.";
   if (streak >= 3) return `A ${streak}-day streak! Keep it alive with a quick session — future you will thank you.`;
   return "Small and steady wins this. One short session today moves you forward.";

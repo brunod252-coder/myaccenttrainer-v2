@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
 import GoalSetter from "@/components/app/GoalSetter";
-import { Sparkle, Target, Flame, Mic, Arrow, CheckCircle } from "@/components/ui/icons";
+import { Sparkle, Flame, Mic, Arrow, CheckCircle } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { getCoachingPlan } from "@/lib/nina/coaching";
@@ -28,125 +28,481 @@ export default async function CoachingPage() {
 
   return (
     <AppLayout userName={userName} role={user.role}>
-      <div className="mb-8 flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9f8f3] text-2xl">🧭</div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">Coaching</p>
-          <h1 className="mt-1 font-display text-3xl text-[#17223b]">Nina&apos;s plan for you</h1>
-          <p className="mt-1 text-sm text-gray-500">A fresh, personalized session every day — built from everything Nina remembers.</p>
-        </div>
-      </div>
+      <div className="space-y-6">
+        <header className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="mat-eyebrow">
+                Nina coaching
+              </p>
 
-      {/* Today's session */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f2a20] to-[#17223b] p-7 text-white shadow-md">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/5" />
-        <div className="relative flex items-center gap-2 text-sm font-semibold text-[#7fe3ac]">
-          <Sparkle className="h-4 w-4" /> Today&apos;s session
-        </div>
-        <h2 className="relative mt-2 font-display text-2xl">{plan.headline}</h2>
-        <p className="relative mt-2 max-w-2xl text-white/85">{firstName}, {plan.motivation}</p>
+              <h1 className="mt-2 font-display text-3xl text-[var(--mat-ink)] md:text-4xl">
+                Your coaching plan
+              </h1>
 
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-3">
-          {plan.exercises.map((ex, i) => (
+              <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+                Nina combines your learning goal, recent practice, and scored
+                speaking evidence to recommend what to work on next.
+              </p>
+            </div>
+
             <Link
-              key={ex.slug + i}
-              href={`/dashboard/lesson/${ex.slug}`}
-              className="group rounded-xl bg-white/10 p-4 backdrop-blur transition hover:bg-white/15"
+              href="/dashboard/nina"
+              className="mat-button mat-button-secondary"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-[#7fe3ac]">Exercise {i + 1}</span>
-                <Arrow className="h-4 w-4 text-white/70 transition group-hover:translate-x-1" />
-              </div>
-              <p className="mt-2 font-display text-lg">{ex.label}</p>
-              <p className="mt-1 text-xs leading-5 text-white/70">{ex.why}</p>
+              View Nina&apos;s memory
             </Link>
-          ))}
-        </div>
-      </div>
+          </div>
+        </header>
 
-      {/* Goal + streak */}
-      <div className="mt-6 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-[#20ad68]" />
-            <h2 className="font-display text-lg text-[#17223b]">Your weekly goal</h2>
-          </div>
-          <div className="mt-4 flex items-end justify-between">
-            <p className="text-sm text-gray-500">Practice days this week</p>
-            <p className="font-display text-2xl text-[#17223b]">{plan.daysThisWeek}<span className="text-base text-gray-400"> / {plan.goal.weeklyTarget}</span></p>
-          </div>
-          <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-gray-100">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#20ad68] to-[#5bc79a]" style={{ width: `${goalPct}%` }} />
-          </div>
-          <p className="mt-3 text-sm font-medium" style={{ color: plan.goalMet ? "#168c56" : "#8592a3" }}>
-            {plan.goalMet ? "🎉 Goal reached this week — wonderful consistency!" : `${plan.goal.weeklyTarget - plan.daysThisWeek} more day(s) to hit your goal.`}
-          </p>
-          <div className="mt-5 border-t border-gray-100 pt-5">
-            <p className="mb-2 text-sm font-semibold text-gray-600">Set your target</p>
-            <GoalSetter weeklyTarget={plan.goal.weeklyTarget} />
-          </div>
-        </div>
+        {/* Today's session */}
+        <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] shadow-[var(--mat-shadow-sm)]">
+          <div className="p-6 sm:p-8">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-2 text-sm font-bold text-[var(--mat-green-800)]">
+                  <Sparkle className="h-4 w-4" />
+                  Today&apos;s coaching session
+                </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Flame className="h-5 w-5 text-[#c98a2b]" />
-            <h2 className="font-display text-lg text-[#17223b]">Momentum</h2>
-          </div>
-          <div className="mt-4 space-y-3">
-            <Row label="Current streak" value={`${plan.streakDays} day${plan.streakDays === 1 ? "" : "s"}`} />
-            <Row label="Practiced today" value={plan.practicedToday ? "Yes ✓" : "Not yet"} />
-            <Row label="Clarity now" value={plan.clarityNow !== null ? String(plan.clarityNow) : "New"} />
-            {plan.goal.clarityTarget && plan.clarityTargetProgress !== null && (
-              <div>
-                <div className="flex justify-between text-sm text-gray-500"><span>Toward clarity {plan.goal.clarityTarget}</span><span className="font-semibold text-[#17223b]">{plan.clarityTargetProgress}%</span></div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-gray-100"><div className="h-full rounded-full bg-[#20ad68]" style={{ width: `${plan.clarityTargetProgress}%` }} /></div>
+                <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)] sm:text-3xl">
+                  {plan.headline}
+                </h2>
+
+                <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+                  {firstName}, {plan.motivation}
+                </p>
+              </div>
+
+              <div className="rounded-full border border-[var(--mat-border-green)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--mat-green-800)]">
+                {plan.exercises.length}{" "}
+                {plan.exercises.length === 1 ? "exercise" : "exercises"}
+              </div>
+            </div>
+
+            {plan.exercises.length > 0 ? (
+              <div className="mt-7 grid gap-4 lg:grid-cols-3">
+                {plan.exercises.map((ex, i) => (
+                  <Link
+                    key={ex.slug + i}
+                    href={`/dashboard/lesson/${ex.slug}`}
+                    className="group rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-white p-5 transition hover:-translate-y-0.5 hover:shadow-[var(--mat-shadow-sm)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-green-700)]">
+                        Exercise {i + 1}
+                      </span>
+
+                      <Arrow className="h-4 w-4 text-[var(--mat-muted)] transition group-hover:translate-x-1" />
+                    </div>
+
+                    <h3 className="mt-3 font-display text-xl text-[var(--mat-ink)]">
+                      {ex.label}
+                    </h3>
+
+                    <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+                      {ex.why}
+                    </p>
+
+                    <div className="mt-5 text-sm font-bold text-[var(--mat-green-700)]">
+                      Open exercise
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-7 rounded-[var(--mat-radius-lg)] border border-dashed border-[var(--mat-border-green)] bg-white p-5">
+                <p className="text-sm font-semibold text-[var(--mat-ink)]">
+                  No coaching exercises are available right now
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                  You can continue pronunciation practice while Nina builds
+                  your next coaching recommendations.
+                </p>
+
+                <Link
+                  href="/dashboard/practice"
+                  className="mat-button mat-button-secondary mt-4"
+                >
+                  <Mic className="h-4 w-4" />
+                  Open Practice
+                </Link>
               </div>
             )}
           </div>
-        </div>
+        </section>
+
+        {/* Goal + streak */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-[1.2fr_1fr]">
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="mat-eyebrow">
+                  Weekly commitment
+                </p>
+
+                <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                  Build a practice rhythm
+                </h2>
+
+                <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--mat-muted)]">
+                  Choose a weekly practice target and compare it with the days
+                  you actually practice.
+                </p>
+              </div>
+
+              <div className="rounded-[var(--mat-radius-lg)] bg-[var(--mat-surface-soft)] px-4 py-3 text-right">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--mat-muted-light)]">
+                  This week
+                </p>
+
+                <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                  {plan.daysThisWeek}
+                  <span className="text-base text-[var(--mat-muted)]">
+                    {" "}
+                    / {plan.goal.weeklyTarget} days
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div
+                className="h-2.5 overflow-hidden rounded-full bg-[var(--mat-surface-soft)]"
+                aria-label={`${plan.daysThisWeek} of ${plan.goal.weeklyTarget} weekly practice days completed`}
+              >
+                <div
+                  className="h-full rounded-full bg-[var(--mat-green-600)]"
+                  style={{ width: `${goalPct}%` }}
+                />
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <p
+                  className={
+                    "text-sm font-semibold " +
+                    (plan.goalMet
+                      ? "text-[var(--mat-green-700)]"
+                      : "text-[var(--mat-muted)]")
+                  }
+                >
+                  {plan.goalMet
+                    ? "Weekly commitment reached."
+                    : `${Math.max(
+                        0,
+                        plan.goal.weeklyTarget - plan.daysThisWeek,
+                      )} ${
+                        Math.max(
+                          0,
+                          plan.goal.weeklyTarget - plan.daysThisWeek,
+                        ) === 1
+                          ? "more practice day"
+                          : "more practice days"
+                      } to reach your weekly commitment.`}
+                </p>
+
+                <span className="text-xs font-semibold text-[var(--mat-muted-light)]">
+                  {goalPct}% complete
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-[var(--mat-border)] pt-6">
+              <p className="text-sm font-bold text-[var(--mat-ink)]">
+                Set your target
+              </p>
+
+              <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                Choose between 3 and 7 practice days per week.
+              </p>
+
+              <div className="mt-4">
+                <GoalSetter weeklyTarget={plan.goal.weeklyTarget} />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div>
+              <p className="mat-eyebrow">
+                Momentum
+              </p>
+
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Your current practice signals
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+                A snapshot of your recent consistency and scored clarity.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-[var(--mat-radius-lg)] bg-[var(--mat-surface-soft)] p-4">
+                <div className="flex items-center gap-2 text-[var(--mat-muted)]">
+                  <Flame className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-[0.1em]">
+                    Streak
+                  </span>
+                </div>
+
+                <p className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+                  {plan.streakDays}
+                  <span className="ml-1 text-sm text-[var(--mat-muted)]">
+                    {plan.streakDays === 1 ? "day" : "days"}
+                  </span>
+                </p>
+              </div>
+
+              <div className="rounded-[var(--mat-radius-lg)] bg-[var(--mat-surface-soft)] p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted)]">
+                  Today
+                </p>
+
+                <p
+                  className={
+                    "mt-2 text-sm font-bold " +
+                    (plan.practicedToday
+                      ? "text-[var(--mat-green-700)]"
+                      : "text-[var(--mat-muted)]")
+                  }
+                >
+                  {plan.practicedToday
+                    ? "Practice recorded"
+                    : "No practice recorded yet"}
+                </p>
+              </div>
+
+              <div className="rounded-[var(--mat-radius-lg)] bg-[var(--mat-surface-soft)] p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted)]">
+                  Current clarity
+                </p>
+
+                <p className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+                  {plan.clarityNow !== null ? plan.clarityNow : "—"}
+                </p>
+
+                <p className="mt-1 text-xs text-[var(--mat-muted-light)]">
+                  {plan.clarityNow !== null
+                    ? "From your scored practice"
+                    : "No scored clarity yet"}
+                </p>
+              </div>
+            </div>
+
+            {plan.goal.clarityTarget &&
+              plan.clarityTargetProgress !== null && (
+                <div className="mt-6 border-t border-[var(--mat-border)] pt-6">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-[var(--mat-ink)]">
+                        Clarity target
+                      </p>
+
+                      <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                        Current scored clarity compared with your saved target
+                        of {plan.goal.clarityTarget}.
+                      </p>
+                    </div>
+
+                    <span className="text-sm font-bold text-[var(--mat-green-700)]">
+                      {plan.clarityTargetProgress}%
+                    </span>
+                  </div>
+
+                  <div
+                    className="mt-4 h-2.5 overflow-hidden rounded-full bg-[var(--mat-surface-soft)]"
+                    aria-label={`${plan.clarityTargetProgress}% progress toward clarity target ${plan.goal.clarityTarget}`}
+                  >
+                    <div
+                      className="h-full rounded-full bg-[var(--mat-green-600)]"
+                      style={{ width: `${plan.clarityTargetProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+          </section>
       </div>
 
       {/* Reviews */}
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]"><CheckCircle className="h-5 w-5 text-[#20ad68]" /> This week in review</h2>
-          <p className="mt-3 leading-7 text-gray-600">{plan.weekReview.summary}</p>
-          <div className="mt-4 flex gap-6 text-sm">
-            <div><span className="font-display text-2xl text-[#17223b]">{plan.weekReview.attemptsThisPeriod}</span><p className="text-gray-400">this week</p></div>
-            <div><span className="font-display text-2xl text-[#52719f]">{plan.weekReview.attemptsLastPeriod}</span><p className="text-gray-400">last week</p></div>
-            {plan.weekReview.deltaPct !== null && (
-              <div><span className="font-display text-2xl" style={{ color: plan.weekReview.deltaPct >= 0 ? "#2e7d5b" : "#c0473f" }}>{plan.weekReview.deltaPct >= 0 ? "+" : ""}{plan.weekReview.deltaPct}%</span><p className="text-gray-400">change</p></div>
-            )}
-          </div>
-        </div>
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mat-eyebrow">
+                Practice review
+              </p>
 
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]">📅 This month</h2>
-          {plan.monthReview ? (
-            <div className="mt-3">
-              <p className="text-sm text-gray-600">In {plan.monthReview.thisMonth}, you recorded <span className="font-semibold text-[#17223b]">{plan.monthReview.attempts}</span> time(s) with an average clarity of <span className="font-semibold text-[#17223b]">{plan.monthReview.avg}</span>.</p>
-              <Link href="/dashboard/progress" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#168c56] hover:underline">See full progress <Arrow className="h-4 w-4" /></Link>
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Put this week in context
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
+                Compare your recent practice activity with the previous period
+                and review the monthly data available so far.
+              </p>
             </div>
-          ) : (
-            <p className="mt-3 text-sm text-gray-500">Your monthly review appears once you&apos;ve practiced. Start today and watch it fill in.</p>
-          )}
-        </div>
-      </div>
 
-      <div className="mt-6 flex justify-center">
-        <Link href="/dashboard/practice" className="inline-flex items-center gap-2 rounded-lg bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357]">
-          <Mic className="h-4 w-4" /> Start today&apos;s session
-        </Link>
+            <Link
+              href="/dashboard/progress"
+              className="mat-button mat-button-secondary"
+            >
+              See full progress
+              <Arrow className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-5">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-[var(--mat-green-700)]" />
+
+                <h3 className="font-display text-xl text-[var(--mat-ink)]">
+                  This week
+                </h3>
+              </div>
+
+              <p className="mt-3 text-sm leading-6 text-[var(--mat-muted)]">
+                {plan.weekReview.summary}
+              </p>
+
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-[var(--mat-radius-lg)] bg-white p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                    This week
+                  </p>
+
+                  <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    {plan.weekReview.attemptsThisPeriod}
+                  </p>
+
+                  <p className="mt-1 text-xs text-[var(--mat-muted)]">
+                    scored attempts
+                  </p>
+                </div>
+
+                <div className="rounded-[var(--mat-radius-lg)] bg-white p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                    Last week
+                  </p>
+
+                  <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    {plan.weekReview.attemptsLastPeriod}
+                  </p>
+
+                  <p className="mt-1 text-xs text-[var(--mat-muted)]">
+                    scored attempts
+                  </p>
+                </div>
+
+                {plan.weekReview.deltaPct !== null && (
+                  <div className="col-span-2 rounded-[var(--mat-radius-lg)] bg-white p-4 sm:col-span-1">
+                    <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                      Change
+                    </p>
+
+                    <p
+                      className={
+                        "mt-1 font-display text-2xl " +
+                        (plan.weekReview.deltaPct >= 0
+                          ? "text-[var(--mat-green-700)]"
+                          : "text-amber-700")
+                      }
+                    >
+                      {plan.weekReview.deltaPct >= 0 ? "+" : ""}
+                      {plan.weekReview.deltaPct}%
+                    </p>
+
+                    <p className="mt-1 text-xs text-[var(--mat-muted)]">
+                      versus last week
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--mat-muted-light)]">
+                Monthly view
+              </p>
+
+              <h3 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+                This month
+              </h3>
+
+              {plan.monthReview ? (
+                <div className="mt-4">
+                  <p className="text-sm leading-6 text-[var(--mat-muted)]">
+                    In {plan.monthReview.thisMonth}, your recorded practice
+                    includes the activity summarized below.
+                  </p>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-[var(--mat-radius-lg)] bg-white p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                        Attempts
+                      </p>
+
+                      <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                        {plan.monthReview.attempts}
+                      </p>
+                    </div>
+
+                    <div className="rounded-[var(--mat-radius-lg)] bg-white p-4">
+                      <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+                        Avg. clarity
+                      </p>
+
+                      <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                        {plan.monthReview.avg}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-[var(--mat-radius-lg)] border border-dashed border-[var(--mat-border-strong)] bg-white p-5">
+                  <p className="text-sm font-semibold text-[var(--mat-ink)]">
+                    No monthly review yet
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                    Monthly practice data will appear here after recorded
+                    practice is available for the period.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="mat-eyebrow">
+                Continue practicing
+              </p>
+
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Put your coaching plan into practice
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
+                Open Practice for the full pronunciation library, or return to
+                today&apos;s recommended exercises above.
+              </p>
+            </div>
+
+            <Link
+              href="/dashboard/practice"
+              className="mat-button mat-button-primary shrink-0"
+            >
+              <Mic className="h-4 w-4" />
+              Open Practice
+            </Link>
+          </div>
+        </section>
+
       </div>
     </AppLayout>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-semibold text-[#17223b]">{value}</span>
-    </div>
   );
 }
