@@ -1,36 +1,465 @@
 @import "tailwindcss";
 
-/* ── Brand + design tokens ─────────────────────────────────────────────
-   Keeps the myACCENTtrainer green, with the demo's refined neutrals,
-   typography, and depth. */
+/*
+ * MyAccentTrainer V2
+ * Visual foundation
+ *
+ * Scope:
+ * - presentation only
+ * - no feature or behavioral contracts
+ * - semantic tokens shared by learner, auth, marketing, and admin surfaces
+ */
+
 :root {
-  --brand: #20ad68;
-  --brand-dark: #169357;
-  --brand-deep: #168c56;
-  --brand-050: #e9f8f3;
-  --brand-100: #d7f2e7;
-  --navy: #17223b;
-  --slate: #52719f;
-  --deep: #142b4c;
-  --surface: #f6faf8;
+  /* Brand */
+  --mat-green-50: #f1fbf6;
+  --mat-green-100: #e3f7ed;
+  --mat-green-200: #c8eedb;
+  --mat-green-300: #9ee0bf;
+  --mat-green-400: #65ca98;
+  --mat-green-500: #2fb171;
+  --mat-green-600: #20945d;
+  --mat-green-700: #19784d;
+  --mat-green-800: #175f40;
+  --mat-green-900: #144f36;
+
+  /* Product neutrals */
+  --mat-ink: #1e2b25;
+  --mat-ink-soft: #3f5148;
+  --mat-muted: #718078;
+  --mat-muted-light: #9aa69f;
+
+  --mat-canvas: #f8faf8;
+  --mat-canvas-warm: #fbfaf6;
+  --mat-surface: #ffffff;
+  --mat-surface-soft: #f4f8f5;
+  --mat-surface-green: #f1f9f4;
+
+  --mat-border: #e4eae6;
+  --mat-border-strong: #d5ded8;
+  --mat-border-green: #c9e8d7;
+
+  /* Supporting accents */
+  --mat-blue: #5577a0;
+  --mat-blue-soft: #edf3f8;
+  --mat-gold: #a97931;
+  --mat-gold-soft: #faf2e3;
+  --mat-red: #b95151;
+  --mat-red-soft: #fdf0f0;
+
+  /* Legacy aliases retained while existing screens migrate */
+  --brand: var(--mat-green-500);
+  --brand-dark: var(--mat-green-600);
+  --brand-deep: var(--mat-green-700);
+  --brand-050: var(--mat-green-100);
+  --brand-100: var(--mat-green-200);
+  --navy: var(--mat-ink);
+  --slate: var(--mat-blue);
+  --deep: #20372d;
+  --surface: var(--mat-canvas);
+
+  /* Geometry */
+  --mat-radius-sm: 0.625rem;
+  --mat-radius-md: 0.875rem;
+  --mat-radius-lg: 1.125rem;
+  --mat-radius-xl: 1.5rem;
+  --mat-radius-pill: 999px;
+
+  /* Depth */
+  --mat-shadow-xs: 0 1px 2px rgb(25 48 37 / 0.04);
+  --mat-shadow-sm:
+    0 1px 2px rgb(25 48 37 / 0.04),
+    0 5px 18px rgb(25 48 37 / 0.045);
+  --mat-shadow-md:
+    0 2px 5px rgb(25 48 37 / 0.04),
+    0 12px 32px rgb(25 48 37 / 0.07);
+  --mat-shadow-lg:
+    0 4px 10px rgb(25 48 37 / 0.05),
+    0 24px 56px rgb(25 48 37 / 0.10);
+
+  /* Focus */
+  --mat-focus: rgb(47 177 113 / 0.22);
 }
 
 @theme inline {
   --font-sans: var(--font-inter);
   --font-display: var(--font-fraunces);
-  --color-background: #ffffff;
-  --color-foreground: var(--navy);
+
+  --color-background: var(--mat-canvas);
+  --color-foreground: var(--mat-ink);
+
+  --color-mat-brand: var(--mat-green-500);
+  --color-mat-brand-dark: var(--mat-green-600);
+  --color-mat-brand-deep: var(--mat-green-700);
+  --color-mat-ink: var(--mat-ink);
+  --color-mat-muted: var(--mat-muted);
+  --color-mat-canvas: var(--mat-canvas);
+  --color-mat-surface: var(--mat-surface);
+  --color-mat-border: var(--mat-border);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--mat-canvas);
+  color: var(--mat-ink);
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: #ffffff;
-  color: var(--navy);
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  margin: 0;
+  background: var(--mat-canvas);
+  color: var(--mat-ink);
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Elegant display headings (Fraunces) */
+::selection {
+  background: var(--mat-green-200);
+  color: var(--mat-ink);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+a[href],
+select:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
+
+img,
+svg,
+video,
+canvas,
+audio {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--mat-focus);
+  outline-offset: 2px;
+}
+
+/* Display typography retained from the existing product. */
 .font-display {
-  font-family: var(--font-fraunces), Georgia, serif;
-  letter-spacing: -0.01em;
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.018em;
+}
+
+/* Shared V2 page language. */
+.mat-page {
+  width: 100%;
+}
+
+.mat-eyebrow {
+  color: var(--mat-green-600);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.mat-page-title {
+  margin-top: 0.35rem;
+  color: var(--mat-ink);
+  font-family: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  font-size: clamp(1.9rem, 2vw + 1rem, 2.65rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+}
+
+.mat-page-copy {
+  margin-top: 0.55rem;
+  max-width: 48rem;
+  color: var(--mat-muted);
+  font-size: 0.925rem;
+  line-height: 1.7;
+}
+
+/* Surfaces */
+.mat-card {
+  border: 1px solid var(--mat-border);
+  border-radius: var(--mat-radius-lg);
+  background: var(--mat-surface);
+  box-shadow: var(--mat-shadow-xs);
+}
+
+.mat-card-soft {
+  border: 1px solid var(--mat-border);
+  border-radius: var(--mat-radius-lg);
+  background: var(--mat-surface-soft);
+}
+
+.mat-card-interactive {
+  border: 1px solid var(--mat-border);
+  border-radius: var(--mat-radius-lg);
+  background: var(--mat-surface);
+  box-shadow: var(--mat-shadow-xs);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.mat-card-interactive:hover {
+  border-color: var(--mat-border-green);
+  box-shadow: var(--mat-shadow-sm);
+  transform: translateY(-1px);
+}
+
+/* Buttons */
+.mat-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--mat-radius-md);
+  padding: 0.7rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.mat-button-primary {
+  border: 1px solid var(--mat-green-600);
+  background: var(--mat-green-600);
+  color: #ffffff;
+  box-shadow: var(--mat-shadow-xs);
+}
+
+.mat-button-primary:hover {
+  border-color: var(--mat-green-700);
+  background: var(--mat-green-700);
+  box-shadow: var(--mat-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.mat-button-secondary {
+  border: 1px solid var(--mat-border-strong);
+  background: var(--mat-surface);
+  color: var(--mat-ink-soft);
+}
+
+.mat-button-secondary:hover {
+  border-color: var(--mat-border-green);
+  background: var(--mat-green-50);
+  color: var(--mat-green-700);
+}
+
+.mat-button-quiet {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--mat-green-700);
+}
+
+.mat-button-quiet:hover {
+  background: var(--mat-green-50);
+}
+
+.mat-button:disabled {
+  box-shadow: none;
+  opacity: 0.55;
+  transform: none;
+}
+
+/* Forms */
+.mat-label {
+  display: block;
+  color: var(--mat-ink-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.mat-input,
+.mat-select,
+.mat-textarea {
+  width: 100%;
+  border: 1px solid var(--mat-border-strong);
+  border-radius: var(--mat-radius-md);
+  background: var(--mat-surface);
+  color: var(--mat-ink);
+  font-size: 0.9rem;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+.mat-input,
+.mat-select {
+  min-height: 2.9rem;
+  padding: 0.72rem 0.9rem;
+}
+
+.mat-textarea {
+  min-height: 7rem;
+  resize: vertical;
+  padding: 0.8rem 0.9rem;
+}
+
+.mat-input::placeholder,
+.mat-textarea::placeholder {
+  color: var(--mat-muted-light);
+}
+
+.mat-input:focus,
+.mat-select:focus,
+.mat-textarea:focus {
+  border-color: var(--mat-green-500);
+  box-shadow: 0 0 0 4px var(--mat-focus);
+}
+
+.mat-input:disabled,
+.mat-select:disabled,
+.mat-textarea:disabled {
+  background: #f3f5f3;
+  color: var(--mat-muted);
+  opacity: 0.75;
+}
+
+/* Status treatments */
+.mat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: var(--mat-radius-pill);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mat-pill-success {
+  background: var(--mat-green-100);
+  color: var(--mat-green-700);
+}
+
+.mat-pill-info {
+  background: var(--mat-blue-soft);
+  color: var(--mat-blue);
+}
+
+.mat-pill-warm {
+  background: var(--mat-gold-soft);
+  color: var(--mat-gold);
+}
+
+.mat-pill-danger {
+  background: var(--mat-red-soft);
+  color: var(--mat-red);
+}
+
+/* Honest empty states: never fabricate learner data for visual completeness. */
+.mat-empty-state {
+  border: 1px dashed var(--mat-border-strong);
+  border-radius: var(--mat-radius-lg);
+  background: var(--mat-surface);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  color: var(--mat-muted);
+  text-align: center;
+}
+
+/* Tabs used for real grouped capabilities such as Nina/Coaching. */
+.mat-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--mat-border);
+}
+
+.mat-tab {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0.8rem 0.9rem;
+  color: var(--mat-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mat-tab:hover {
+  color: var(--mat-ink);
+}
+
+.mat-tab-active {
+  color: var(--mat-green-700);
+}
+
+.mat-tab-active::after {
+  position: absolute;
+  right: 0.75rem;
+  bottom: -1px;
+  left: 0.75rem;
+  height: 2px;
+  border-radius: 999px 999px 0 0;
+  background: var(--mat-green-500);
+  content: "";
+}
+
+/* Utility divider */
+.mat-divider {
+  height: 1px;
+  border: 0;
+  background: var(--mat-border);
+}
+
+/* Respect users who request reduced animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .mat-page-title {
+    font-size: 1.9rem;
+  }
+
+  .mat-button {
+    min-height: 2.85rem;
+  }
 }
