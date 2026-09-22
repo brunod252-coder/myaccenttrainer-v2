@@ -15,21 +15,55 @@ export default function LessonManager({ items }: { items: Item[] }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
 
-  async function post(body: Record<string, unknown>) {
+  async function post(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
+    setNote("");
+
     try {
-      await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const response = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        setNote("The lesson change could not be saved. Please try again.");
+        return false;
+      }
+
       router.refresh();
-    } catch { /* ignore */ }
-    setBusy(false);
+      return true;
+    } catch {
+      setNote("The lesson change could not be saved. Please try again.");
+      return false;
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function add(e: React.FormEvent) {
     e.preventDefault();
     if (!v.subtitle || !v.referenceText) { setNote("A lesson needs a name and a phrase."); return; }
     setNote("");
-    await post({ action: "create", subtitle: v.subtitle, referenceText: v.referenceText, focus: v.focus || "r", description: v.description || "" });
-    setV({});
+    const saved = await post({
+      action: "create",
+      subtitle: v.subtitle,
+      referenceText: v.referenceText,
+      focus: v.focus || "r",
+      description: v.description || "",
+    });
+
+    if (saved) setV({});
+  }
+
+  async function removeLesson(id: string, subtitle: string) {
+    const confirmed = window.confirm(
+      `Delete "${subtitle}"? This removes the custom lesson itself. Historical learner activity that refers to its lesson slug may remain in stored records.`,
+    );
+
+    if (!confirmed) return;
+
+    await post({ action: "delete", id });
   }
 
   async function uploadAudio(id: string, file: File) {
@@ -72,7 +106,7 @@ export default function LessonManager({ items }: { items: Item[] }) {
               <input type="file" accept="audio/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAudio(it.id, f); }} />
             </label>
             <button type="button" onClick={() => post({ action: "toggle", id: it.id, published: !it.published })} disabled={busy} className={"rounded-full px-2.5 py-1 text-xs font-semibold " + (it.published ? "bg-[#e5f3ec] text-[#2e7d5b]" : "bg-[#eef4f9] text-[#52719f]")}>{it.published ? "Published" : "Hidden"}</button>
-            <button type="button" onClick={() => post({ action: "delete", id: it.id })} disabled={busy} className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-[#c0473f] hover:bg-red-50">Delete</button>
+            <button type="button" onClick={() => removeLesson(it.id, it.subtitle)} disabled={busy} className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-semibold text-[#c0473f] hover:bg-red-50">Delete</button>
           </div>
         ))}
       </div>
