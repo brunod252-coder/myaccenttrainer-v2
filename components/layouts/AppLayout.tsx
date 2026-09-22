@@ -9,15 +9,23 @@ type AppLayoutProps = {
   role?: string | null;
 };
 
-export default function AppLayout({ children, userName, role }: AppLayoutProps) {
+export default function AppLayout({
+  children,
+  userName,
+  role,
+}: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-[#f6faf8] text-[#17223b]">
-      <div className="grid grid-cols-1 md:grid-cols-[260px_1fr]">
+    <div className="min-h-screen bg-[var(--mat-canvas)] text-[var(--mat-ink)]">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[252px_minmax(0,1fr)]">
         <AppSidebar userName={userName} role={role} />
-        <div className="flex min-h-screen flex-col">
+
+        <div className="flex min-h-screen min-w-0 flex-col">
           <AppTopbar userName={userName} />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8 md:px-10">
-            {children}
+
+          <main className="w-full flex-1">
+            <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-9 xl:px-10">
+              {children}
+            </div>
           </main>
         </div>
       </div>

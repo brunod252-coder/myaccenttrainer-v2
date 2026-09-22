@@ -10,58 +10,146 @@ import {
   Mic,
   Chart,
   Wallet,
-  Gift,
   Gear,
   Clock,
   Target,
   Logout,
 } from "@/components/ui/icons";
 
-const primary = [
-  { href: "/dashboard", label: "Dashboard", Icon: Grid },
-  { href: "/dashboard/courses", label: "Courses", Icon: Book },
-  { href: "/dashboard/practice", label: "Practice", Icon: Mic },
-  { href: "/dashboard/nina", label: "Nina", Icon: Sparkle },
-  { href: "/dashboard/coaching", label: "Coaching", Icon: Target },
-  { href: "/dashboard/progress", label: "Progress", Icon: Chart },
-];
-
-const account = [
-  { href: "/dashboard/wallet", label: "Wallet", Icon: Wallet },
-  { href: "/dashboard/billing", label: "Billing", Icon: Clock },
-  { href: "/dashboard/referrals", label: "Referrals", Icon: Gift },
-  { href: "/dashboard/settings", label: "Settings", Icon: Gear },
-];
-
-type NavigationItem = (typeof primary)[number];
-
-type NavLinkProps = NavigationItem & {
-  pathname: string;
+type NavItem = {
+  href: string;
+  label: string;
+  Icon: typeof Grid;
+  activePrefixes?: string[];
 };
 
+const learning: NavItem[] = [
+  {
+    href: "/dashboard",
+    label: "Dashboard",
+    Icon: Grid,
+  },
+  {
+    href: "/dashboard/courses",
+    label: "My Learning",
+    Icon: Book,
+    activePrefixes: ["/dashboard/courses", "/dashboard/lesson"],
+  },
+  {
+    href: "/dashboard/practice",
+    label: "Practice",
+    Icon: Mic,
+  },
+  {
+    href: "/dashboard/nina",
+    label: "Nina",
+    Icon: Sparkle,
+    activePrefixes: ["/dashboard/nina", "/dashboard/coaching"],
+  },
+  {
+    href: "/dashboard/progress",
+    label: "Progress",
+    Icon: Chart,
+  },
+];
+
+const account: NavItem[] = [
+  {
+    href: "/dashboard/wallet",
+    label: "Learning Credit",
+    Icon: Wallet,
+    activePrefixes: ["/dashboard/wallet", "/dashboard/referrals"],
+  },
+  {
+    href: "/dashboard/billing",
+    label: "Membership",
+    Icon: Clock,
+  },
+  {
+    href: "/dashboard/settings",
+    label: "Settings",
+    Icon: Gear,
+  },
+];
+
+function itemIsActive(pathname: string, item: NavItem) {
+  if (item.href === "/dashboard") {
+    return pathname === "/dashboard";
+  }
+
+  const prefixes = item.activePrefixes ?? [item.href];
+
+  return prefixes.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 function SidebarNavLink({
-  href,
-  label,
-  Icon,
+  item,
   pathname,
-}: NavLinkProps) {
-  const active =
-    pathname === href ||
-    (href !== "/dashboard" && pathname.startsWith(href));
+}: {
+  item: NavItem;
+  pathname: string;
+}) {
+  const active = itemIsActive(pathname, item);
+  const Icon = item.Icon;
 
   return (
     <Link
-      href={href}
-      className={
-        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition " +
-        (active
-          ? "bg-white/10 text-white shadow-[inset_3px_0_0_#20ad68]"
-          : "text-white/65 hover:bg-white/5 hover:text-white")
-      }
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={[
+        "group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition",
+        active
+          ? "bg-[var(--mat-green-100)] text-[var(--mat-green-700)]"
+          : "text-[var(--mat-muted)] hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]",
+      ].join(" ")}
     >
-      <Icon className="h-[18px] w-[18px]" />
-      {label}
+      <span
+        className={[
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition",
+          active
+            ? "bg-white text-[var(--mat-green-600)] shadow-[var(--mat-shadow-xs)]"
+            : "text-[var(--mat-muted)] group-hover:text-[var(--mat-green-600)]",
+        ].join(" ")}
+      >
+        <Icon className="h-[18px] w-[18px]" />
+      </span>
+
+      <span className="truncate">{item.label}</span>
+
+      {active ? (
+        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--mat-green-500)]" />
+      ) : null}
     </Link>
+  );
+}
+
+function NavigationSection({
+  label,
+  items,
+  pathname,
+}: {
+  label: string;
+  items: NavItem[];
+  pathname: string;
+}) {
+  return (
+    <div>
+      <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mat-muted-light)]">
+        {label}
+      </p>
+
+      <div className="space-y-1">
+        {items.map((item) => (
+          <SidebarNavLink
+            key={item.href}
+            item={item}
+            pathname={pathname}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -75,92 +163,101 @@ export default function AppSidebar({ userName, role }: Props) {
   const initial = (userName || "U").slice(0, 1).toUpperCase();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[260px] flex-col bg-[#142b4c] px-4 py-6 md:flex">
-      <Link href="/dashboard" className="px-2 text-lg font-bold">
-        <span className="text-[#3ecb8a]">my</span>
-        <span className="mx-1 rounded-md bg-[#20ad68] px-1.5 text-white">
-          ACCENT
+    <aside className="sticky top-0 hidden h-screen w-[252px] flex-col border-r border-[var(--mat-border)] bg-white px-4 py-5 lg:flex">
+      <Link
+        href="/dashboard"
+        className="flex items-center gap-2 rounded-xl px-2 py-2"
+        aria-label="MyAccentTrainer dashboard"
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white shadow-[var(--mat-shadow-sm)]">
+          <Mic className="h-[18px] w-[18px]" />
         </span>
-        <span className="text-white/80">trainer</span>
+
+        <span className="leading-none">
+          <span className="block text-[15px] font-extrabold tracking-[-0.02em] text-[var(--mat-ink)]">
+            MyAccentTrainer
+          </span>
+          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--mat-muted-light)]">
+            Learn with Nina
+          </span>
+        </span>
       </Link>
 
-      <nav className="mt-8 flex flex-col gap-1">
-        {primary.map((item) => (
-          <SidebarNavLink
-            key={item.href}
-            {...item}
-            pathname={pathname}
-          />
-        ))}
+      <nav className="mt-7 space-y-6">
+        <NavigationSection
+          label="Learn"
+          items={learning}
+          pathname={pathname}
+        />
 
-        <p className="px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-white/35">
-          Account
-        </p>
+        <NavigationSection
+          label="Account"
+          items={account}
+          pathname={pathname}
+        />
 
-        {account.map((item) => (
-          <SidebarNavLink
-            key={item.href}
-            {...item}
-            pathname={pathname}
-          />
-        ))}
-
-        {role === "ADMIN" && (
-          <>
-            <p className="px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-wider text-white/35">
+        {role === "ADMIN" ? (
+          <div>
+            <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mat-muted-light)]">
               Staff
             </p>
 
-            <SidebarNavLink
+            <Link
               href="/admin"
-              label="Admin"
-              Icon={Target}
-              pathname={pathname}
-            />
-          </>
-        )}
+              className="group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--mat-muted)] transition hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--mat-muted)] group-hover:text-[var(--mat-green-600)]">
+                <Target className="h-[18px] w-[18px]" />
+              </span>
+              Admin
+            </Link>
+          </div>
+        ) : null}
       </nav>
 
       <div className="mt-auto">
-        <div className="rounded-2xl bg-white/5 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Sparkle className="h-4 w-4 text-[#3ecb8a]" />
-            Meet Nina
+        <Link
+          href="/dashboard/nina"
+          className="block rounded-2xl border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-4 transition hover:bg-[var(--mat-green-100)]"
+        >
+          <div className="flex items-center gap-2 text-sm font-bold text-[var(--mat-green-700)]">
+            <Sparkle className="h-4 w-4" />
+            Nina
           </div>
 
-          <p className="mt-1 text-xs leading-5 text-white/60">
-            Your patient AI coach � practice any time and get instant feedback.
+          <p className="mt-1.5 text-xs leading-5 text-[var(--mat-ink-soft)]">
+            Your personal accent coach remembers your practice and helps you
+            choose what to work on next.
           </p>
-        </div>
+        </Link>
 
-        <div className="mt-4 flex items-center gap-3 border-t border-white/10 pt-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#20ad68] font-semibold text-white">
-            {initial}
-          </div>
+        <div className="mt-4 border-t border-[var(--mat-border)] pt-4">
+          <div className="flex items-center gap-3 px-2">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--mat-green-600)] text-sm font-bold text-white">
+              {initial}
+            </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {userName || "User"}
-            </p>
-
-            {role && (
-              <p className="text-xs text-white/50">
-                {role}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-[var(--mat-ink)]">
+                {userName || "Learner"}
               </p>
-            )}
+
+              <p className="text-xs text-[var(--mat-muted)]">
+                {role === "ADMIN" ? "Administrator" : "Learner"}
+              </p>
+            </div>
           </div>
 
+          <form action="/api/auth/logout" method="post" className="mt-2">
+            <button
+              type="submit"
+              className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--mat-muted)] transition hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]"
+            >
+              <Logout className="h-[18px] w-[18px]" />
+              Log out
+            </button>
+          </form>
         </div>
-
-        <form action="/api/auth/logout" method="post" className="mt-3">
-          <button
-            type="submit"
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/5 hover:text-white"
-          >
-            <Logout className="h-[18px] w-[18px]" />
-            Log out
-          </button>
-        </form>
       </div>
     </aside>
   );
