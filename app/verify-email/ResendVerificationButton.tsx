@@ -26,6 +26,7 @@ export default function ResendVerificationButton() {
           data.message ||
             "We could not resend the verification email. Please try again.",
         );
+        setLoading(false);
         return;
       }
 
@@ -44,26 +45,31 @@ export default function ResendVerificationButton() {
   return (
     <div>
       {message ? (
-        <p
+        <div
+          role={success ? "status" : "alert"}
           className={[
-            "mb-5 rounded-xl px-4 py-3 text-sm",
+            "mb-5 rounded-xl border px-4 py-3 text-sm leading-6",
             success
-              ? "bg-[#e9f8f3] text-[#168c56]"
-              : "bg-red-50 text-red-700",
+              ? "border-[var(--mat-border-green)] bg-[var(--mat-green-50)] text-[var(--mat-green-700)]"
+              : "border-[#efcccc] bg-[var(--mat-red-soft)] text-[var(--mat-red)]",
           ].join(" ")}
         >
           {message}
-        </p>
+        </div>
       ) : null}
 
       <button
         type="button"
         onClick={resendVerification}
         disabled={loading}
-        className="inline-flex w-full items-center justify-center rounded-xl bg-[#20ad68] px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mat-button mat-button-primary w-full"
       >
-        {loading ? "Sending verification email..." : "Resend verification email"}
+        {loading ? "Sending verification email…" : "Resend verification email"}
       </button>
+
+      <p className="mt-3 text-center text-xs leading-5 text-[var(--mat-muted)]">
+        You can request another message if the first one did not arrive.
+      </p>
     </div>
   );
 }

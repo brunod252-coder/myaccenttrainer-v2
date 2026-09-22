@@ -25,7 +25,8 @@ export default function CheckoutButton() {
         configured?: boolean;
       };
 
-      const destination = data.url || data.href;
+      const destination =
+        data.url || data.href;
 
       if (!response.ok || !destination) {
         setMessage(
@@ -37,7 +38,9 @@ export default function CheckoutButton() {
 
       window.location.assign(destination);
     } catch {
-      setMessage("We could not reach the payment service. Please try again.");
+      setMessage(
+        "We could not reach the payment service. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -46,24 +49,33 @@ export default function CheckoutButton() {
   return (
     <div>
       {message ? (
-        <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mb-5 rounded-xl border border-[#efcccc] bg-[var(--mat-red-soft)] px-4 py-3 text-sm leading-6 text-[var(--mat-red)]"
+        >
           {message}
-        </p>
+        </div>
       ) : null}
 
       <button
         type="button"
         onClick={beginCheckout}
         disabled={loading}
-        className="inline-flex w-full items-center justify-center rounded-xl bg-[#20ad68] px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mat-button w-full border border-[var(--mat-green-500)] bg-[var(--mat-green-500)] text-white hover:border-[var(--mat-green-400)] hover:bg-[var(--mat-green-400)]"
       >
-        {loading ? "Opening secure checkout..." : "Continue to Secure Checkout"}
+        {loading
+          ? "Opening secure checkout…"
+          : "Continue to secure checkout"}
       </button>
 
-      <p className="mt-4 text-center text-xs leading-5 text-gray-500">
-        Secure payment processing is provided by Stripe. MyAccentTrainer does
-        not store your complete card number.
-      </p>
+      <div className="mt-4 flex items-start justify-center gap-2 text-center text-xs leading-5 text-white/60">
+        <span aria-hidden="true">🔒</span>
+
+        <p>
+          Secure payment processing is provided by Stripe. MyAccentTrainer
+          does not store your complete card number.
+        </p>
+      </div>
     </div>
   );
 }

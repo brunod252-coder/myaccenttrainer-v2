@@ -2,12 +2,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import AssessmentForm from "./AssessmentForm";
+import { Mic } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 
 export default async function OnboardingAssessmentPage() {
-  const token =
-    (await cookies()).get("mat_session")?.value;
+  const token = (await cookies()).get("mat_session")?.value;
 
   if (!token) {
     redirect("/login");
@@ -53,58 +53,70 @@ export default async function OnboardingAssessmentPage() {
     redirect("/onboarding/plan");
   }
 
-  const firstName =
-    user.firstName?.trim() || "there";
+  const firstName = user.firstName?.trim() || "there";
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-5 py-12">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-          <span>My Accent Trainer</span>
-          <span>Step 3 of 6</span>
+    <main className="min-h-screen bg-[var(--mat-green-50)] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="mb-6 flex items-center justify-between gap-4 px-1">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white">
+              <Mic className="h-[18px] w-[18px]" />
+            </span>
+
+            <span className="text-sm font-extrabold tracking-[-0.02em] text-[var(--mat-ink)]">
+              MyAccentTrainer
+            </span>
+          </div>
+
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted-light)]">
+            Step 3 of 6
+          </span>
         </div>
 
-        <section className="rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-200/50 md:p-10">
+        <section className="rounded-[28px] border border-[var(--mat-border-green)] bg-white p-6 shadow-[var(--mat-shadow-lg)] sm:p-8 md:p-10">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
-              Free learning assessment
+            <p className="mat-eyebrow">
+              Your learning assessment
             </p>
 
-            <h1 className="mt-3 font-display text-4xl leading-tight text-[#17223b] md:text-5xl">
+            <h1 className="mat-page-title">
               Tell Nina what you want English to do for you, {firstName}.
             </h1>
 
-            <p className="mt-5 text-base leading-7 text-gray-600">
-              Your learning path should begin with your goal—not
-              with a payment page. These two questions give Nina
-              the starting context she needs to make your practice
-              more relevant from the beginning.
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-[var(--mat-muted)]">
+              Your learning path starts with your goal and your current
+              starting point. These two questions give Nina the context she
+              needs to make your learning experience more relevant from the
+              beginning.
             </p>
           </div>
 
-          <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
-            <span className="font-semibold text-[#168c56]">
+          <div className="mt-8 grid gap-2 rounded-2xl border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4 text-xs sm:grid-cols-3 md:grid-cols-6">
+            <span className="font-bold text-[var(--mat-green-700)]">
               ✓ Account
             </span>
-            <span className="font-semibold text-[#168c56]">
+            <span className="font-bold text-[var(--mat-green-700)]">
               ✓ Email
             </span>
-            <span className="font-semibold text-[#17223b]">
+            <span className="font-bold text-[var(--mat-ink)]">
               3. Assessment
             </span>
-            <span>4. Membership</span>
-            <span>5. Payment</span>
-            <span>6. Trial</span>
+            <span className="text-[var(--mat-muted)]">
+              4. Membership
+            </span>
+            <span className="text-[var(--mat-muted)]">
+              5. Payment
+            </span>
+            <span className="text-[var(--mat-muted)]">
+              6. Trial
+            </span>
           </div>
 
           <div className="mt-10">
             <AssessmentForm
-              initialGoal={
-                user.profile?.englishGoal
-              }
-              initialLevel={
-                user.profile?.proficiencyLevel
-              }
+              initialGoal={user.profile?.englishGoal}
+              initialLevel={user.profile?.proficiencyLevel}
             />
           </div>
         </section>

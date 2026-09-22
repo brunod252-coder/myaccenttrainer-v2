@@ -28,8 +28,8 @@ export const PLANS: Plan[] = [
     stripePriceEnv: "STRIPE_PRICE_ID",
     perks: [
       "Every lesson & sound track",
-      "Unlimited feedback from Nina",
-      "Progress, streaks & certificates",
+      "Speaking practice and feedback",
+      "Progress tracking and personalized coaching",
       "Cancel anytime",
     ],
   },
@@ -46,8 +46,8 @@ export const PLANS: Plan[] = [
     perks: [
       "Everything in Monthly",
       "Save $40.88 per year vs. monthly",
-      "Priority access to new courses",
-      "Best value for serious learners",
+      "Full Premium access throughout your membership",
+      "Annual billing at the lower effective monthly cost",
     ],
   },
 ];

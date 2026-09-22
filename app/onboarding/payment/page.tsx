@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import CheckoutButton from "./CheckoutButton";
+import { Mic } from "@/components/ui/icons";
 import {
   canChoosePlan,
   getEnrollmentRedirect,
@@ -53,14 +54,12 @@ export default async function OnboardingPaymentPage() {
     redirect("/login");
   }
 
-  const enrollmentState =
-    getEnrollmentState({
-      emailVerified: user.emailVerified,
-      englishGoal: user.profile?.englishGoal,
-      proficiencyLevel: user.profile?.proficiencyLevel,
-      subscriptionStatus:
-        user.subscriptionStatus,
-    });
+  const enrollmentState = getEnrollmentState({
+    emailVerified: user.emailVerified,
+    englishGoal: user.profile?.englishGoal,
+    proficiencyLevel: user.profile?.proficiencyLevel,
+    subscriptionStatus: user.subscriptionStatus,
+  });
 
   if (canChoosePlan(enrollmentState)) {
     redirect("/onboarding/plan");
@@ -90,137 +89,186 @@ export default async function OnboardingPaymentPage() {
     redirect("/onboarding/plan");
   }
 
-  const planPrice = formatMoney(plan.priceMinor);
+  const planPrice =
+    formatMoney(plan.priceMinor);
+
   const billingLabel =
-    plan.interval === "month" ? `${planPrice}/month` : `${planPrice}/year`;
+    plan.interval === "month"
+      ? `${planPrice}/month`
+      : `${planPrice}/year`;
 
   const trialEnds = new Date();
   trialEnds.setDate(trialEnds.getDate() + 2);
 
-  const trialEndLabel = new Intl.DateTimeFormat("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }).format(trialEnds);
+  const trialEndLabel =
+    new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    }).format(trialEnds);
 
-  const firstName = user.firstName || "there";
+  const firstName =
+    user.firstName || "there";
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-5 py-12">
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-          <span>My Accent Trainer</span>
-          <span>Step 5 of 6</span>
+    <main className="min-h-screen bg-[var(--mat-green-50)] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="mb-6 flex items-center justify-between gap-4 px-1">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white">
+              <Mic className="h-[18px] w-[18px]" />
+            </span>
+
+            <span className="text-sm font-extrabold tracking-[-0.02em] text-[var(--mat-ink)]">
+              MyAccentTrainer
+            </span>
+          </div>
+
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted-light)]">
+            Step 5 of 6
+          </span>
         </div>
 
-        <section className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-xl shadow-slate-200/50">
-          <div className="border-b border-gray-100 p-7 md:p-10">
+        <section className="overflow-hidden rounded-[28px] border border-[var(--mat-border-green)] bg-white shadow-[var(--mat-shadow-lg)]">
+          <div className="border-b border-[var(--mat-border)] p-6 sm:p-8 md:p-10">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
+              <p className="mat-eyebrow">
                 Complete your enrollment
               </p>
 
-              <h1 className="mt-3 font-display text-4xl leading-tight text-[#17223b]">
+              <h1 className="mat-page-title">
                 One last step, {firstName}.
               </h1>
 
-              <p className="mt-4 text-base leading-7 text-gray-600">
+              <p className="mt-5 text-sm leading-7 text-[var(--mat-muted)]">
                 Add a valid payment method to activate your two-day Premium
-                trial. You will receive full Premium access immediately and
-                will not be charged today.
+                trial. You&apos;ll receive Premium access immediately and
+                won&apos;t be charged today.
               </p>
             </div>
 
-            <div className="mt-8 grid gap-3 rounded-2xl bg-[#f8fafc] p-5 text-sm text-gray-600 md:grid-cols-6">
-              <span className="font-semibold text-[#168c56]">
+            <div className="mt-8 grid gap-2 rounded-2xl border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4 text-xs sm:grid-cols-3 md:grid-cols-6">
+              <span className="font-bold text-[var(--mat-green-700)]">
                 ✓ Account
               </span>
-              <span className="font-semibold text-[#168c56]">
+              <span className="font-bold text-[var(--mat-green-700)]">
                 ✓ Email
               </span>
-              <span className="font-semibold text-[#168c56]">
+              <span className="font-bold text-[var(--mat-green-700)]">
                 ✓ Assessment
               </span>
-              <span className="font-semibold text-[#168c56]">
+              <span className="font-bold text-[var(--mat-green-700)]">
                 ✓ Membership
               </span>
-              <span className="font-semibold text-[#17223b]">
+              <span className="font-bold text-[var(--mat-ink)]">
                 5. Payment
               </span>
-              <span>6. Trial</span>
+              <span className="text-[var(--mat-muted)]">
+                6. Trial
+              </span>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="p-7 md:p-10">
-              <div className="rounded-3xl border border-gray-100 p-6">
+          <div className="grid lg:grid-cols-[1.08fr_0.92fr]">
+            <div className="p-6 sm:p-8 md:p-10">
+              <div className="rounded-2xl border border-[var(--mat-border)] bg-white p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-wider text-[#20ad68]">
+                    <p className="mat-eyebrow">
                       Selected membership
                     </p>
 
-                    <h2 className="mt-2 font-display text-3xl text-[#17223b]">
+                    <h2 className="mt-2 font-display text-3xl text-[var(--mat-ink)]">
                       Premium {plan.name}
                     </h2>
 
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
                       {plan.blurb}
                     </p>
                   </div>
 
                   {plan.featured ? (
-                    <span className="rounded-full bg-[#17223b] px-3 py-1 text-xs font-semibold text-white">
+                    <span className="mat-pill bg-[var(--mat-ink)] text-white">
                       Best value
                     </span>
                   ) : null}
                 </div>
 
-                <div className="mt-7 space-y-4 border-t border-gray-100 pt-6 text-sm text-gray-600">
+                <div className="mt-7 space-y-3 border-t border-[var(--mat-border)] pt-6">
                   {plan.perks.map((perk) => (
-                    <p key={perk}>✓ {perk}</p>
+                    <p
+                      key={perk}
+                      className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]"
+                    >
+                      <span className="font-bold text-[var(--mat-green-600)]">
+                        ✓
+                      </span>
+                      <span>{perk}</span>
+                    </p>
                   ))}
 
-                  <p>✓ Full Premium access throughout your trial</p>
-                  <p>✓ Cancel before the trial ends to avoid the first charge</p>
+                  <p className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]">
+                    <span className="font-bold text-[var(--mat-green-600)]">
+                      ✓
+                    </span>
+                    <span>Full Premium access throughout your trial</span>
+                  </p>
+
+                  <p className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]">
+                    <span className="font-bold text-[var(--mat-green-600)]">
+                      ✓
+                    </span>
+                    <span>Cancel before the trial ends to avoid the first charge</span>
+                  </p>
                 </div>
 
                 <Link
                   href="/onboarding/plan"
-                  className="mt-6 inline-flex text-sm font-semibold text-[#168c56] hover:underline"
+                  className="mt-6 inline-flex text-sm font-bold text-[var(--mat-green-700)] transition hover:text-[var(--mat-green-800)]"
                 >
                   Change membership plan
                 </Link>
               </div>
             </div>
 
-            <aside className="bg-gradient-to-br from-[#0f2a20] to-[#17223b] p-7 text-white md:p-10">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7fe3ac]">
+            <aside className="bg-[var(--mat-green-800)] p-6 text-white sm:p-8 md:p-10">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--mat-green-200)]">
                 Order summary
               </p>
 
-              <div className="mt-8 rounded-3xl bg-white/10 p-6 ring-1 ring-white/10">
+              <div className="mt-7 rounded-2xl border border-white/10 bg-white/[0.07] p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="font-display text-2xl">
                       Premium {plan.name}
                     </p>
+
                     <p className="mt-1 text-sm text-white/65">
                       Two-day free trial
                     </p>
                   </div>
 
-                  <p className="font-display text-xl">{billingLabel}</p>
+                  <p className="font-display text-xl">
+                    {billingLabel}
+                  </p>
                 </div>
 
                 <div className="mt-8 space-y-5 border-t border-white/10 pt-6">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/70">Due today</span>
-                    <strong className="text-2xl text-[#7fe3ac]">$0.00</strong>
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-white/70">
+                      Due today
+                    </span>
+
+                    <strong className="text-2xl text-[var(--mat-green-200)]">
+                      $0.00
+                    </strong>
                   </div>
 
                   <div className="flex items-start justify-between gap-6">
-                    <span className="text-white/70">First charge</span>
+                    <span className="text-white/70">
+                      First charge
+                    </span>
+
                     <span className="text-right font-semibold">
                       {billingLabel}
                       <br />
@@ -230,16 +278,16 @@ export default async function OnboardingPaymentPage() {
                     </span>
                   </div>
 
-                  {plan.interval === "year" ? (
-                    <div className="rounded-xl bg-[#7fe3ac]/10 px-4 py-3 text-sm text-[#b9f4d2]">
-                      Annual billing saves $40.88 compared with paying monthly.
+                  {plan.savingsLabel ? (
+                    <div className="rounded-xl bg-white/[0.07] px-4 py-3 text-sm text-[var(--mat-green-200)]">
+                      {plan.savingsLabel} with annual billing.
                     </div>
                   ) : null}
                 </div>
               </div>
 
-              <div className="mt-7 rounded-2xl bg-white/5 p-5 text-sm leading-6 text-white/75">
-                <p className="font-semibold text-white">
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.05] p-5 text-sm leading-6 text-white/75">
+                <p className="font-bold text-white">
                   Your card will not be charged today.
                 </p>
 

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import TrialConfirmation from "./TrialConfirmation";
+import { Mic, Sparkle } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 
 export default async function OnboardingSuccessPage() {
@@ -18,28 +19,68 @@ export default async function OnboardingSuccessPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f6f8fb] px-5 py-12">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-8 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.16em] text-gray-400">
-          <span>My Accent Trainer</span>
-          <span>Step 6 of 6</span>
+    <main className="min-h-screen bg-[var(--mat-green-50)] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-6 flex items-center justify-between gap-4 px-1">
+          <div className="flex items-center gap-2">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white">
+              <Mic className="h-[18px] w-[18px]" />
+            </span>
+
+            <span className="text-sm font-extrabold tracking-[-0.02em] text-[var(--mat-ink)]">
+              MyAccentTrainer
+            </span>
+          </div>
+
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted-light)]">
+            Step 6 of 6
+          </span>
         </div>
 
-        <section className="rounded-[2rem] border border-white bg-white p-7 shadow-xl shadow-slate-200/50 md:p-10">
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
-            Welcome to Premium
-          </p>
+        <section className="overflow-hidden rounded-[28px] border border-[var(--mat-border-green)] bg-white shadow-[var(--mat-shadow-lg)]">
+          <div className="border-b border-[var(--mat-border)] p-6 text-center sm:p-8 md:p-10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--mat-green-100)] text-[var(--mat-green-700)]">
+              <Sparkle className="h-7 w-7" />
+            </div>
 
-          <h1 className="mt-3 font-display text-4xl leading-tight text-[#17223b]">
-            Your learning journey begins now.
-          </h1>
+            <p className="mat-eyebrow mt-6">
+              Welcome to Premium
+            </p>
 
-          <p className="mt-4 text-base leading-7 text-gray-600">
-            We are completing your enrollment and preparing your personalized
-            MyAccentTrainer workspace.
-          </p>
+            <h1 className="mat-page-title">
+              Your learning journey begins now.
+            </h1>
 
-          <TrialConfirmation />
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[var(--mat-muted)]">
+              We&apos;re confirming your enrollment and preparing your
+              personalized MyAccentTrainer workspace.
+            </p>
+          </div>
+
+          <div className="p-6 sm:p-8 md:p-10">
+            <div className="mb-8 grid gap-2 rounded-2xl border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4 text-xs sm:grid-cols-3 md:grid-cols-6">
+              <span className="font-bold text-[var(--mat-green-700)]">
+                ✓ Account
+              </span>
+              <span className="font-bold text-[var(--mat-green-700)]">
+                ✓ Email
+              </span>
+              <span className="font-bold text-[var(--mat-green-700)]">
+                ✓ Assessment
+              </span>
+              <span className="font-bold text-[var(--mat-green-700)]">
+                ✓ Membership
+              </span>
+              <span className="font-bold text-[var(--mat-green-700)]">
+                ✓ Payment
+              </span>
+              <span className="font-bold text-[var(--mat-ink)]">
+                6. Trial
+              </span>
+            </div>
+
+            <TrialConfirmation />
+          </div>
         </section>
       </div>
     </main>

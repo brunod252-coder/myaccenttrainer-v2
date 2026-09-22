@@ -76,15 +76,10 @@ export default function AssessmentForm({
 }: AssessmentFormProps) {
   const router = useRouter();
 
-  const [englishGoal, setEnglishGoal] =
-    useState(initialGoal ?? "");
-
-  const [proficiencyLevel, setProficiencyLevel] =
-    useState(initialLevel ?? "");
-
+  const [englishGoal, setEnglishGoal] = useState(initialGoal ?? "");
+  const [proficiencyLevel, setProficiencyLevel] = useState(initialLevel ?? "");
   const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canContinue =
     Boolean(englishGoal) &&
@@ -142,57 +137,54 @@ export default function AssessmentForm({
   return (
     <form onSubmit={handleSubmit}>
       <section>
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
+        <p className="mat-eyebrow">
           Your learning goal
         </p>
 
-        <h2 className="mt-3 font-display text-3xl text-[#17223b]">
+        <h2 className="mt-3 font-display text-3xl leading-tight text-[var(--mat-ink)]">
           What would you most like English to help you do?
         </h2>
 
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500">
-          Choose the reason that matters most right now. Nina will
-          use this to shape your learning experience.
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--mat-muted)]">
+          Choose the reason that matters most right now. Nina will use this
+          to shape your learning experience.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {GOALS.map((goal) => {
-            const selected =
-              englishGoal === goal.value;
+            const selected = englishGoal === goal.value;
 
             return (
               <button
                 key={goal.value}
                 type="button"
-                onClick={() =>
-                  setEnglishGoal(goal.value)
-                }
-                className={[
-                  "rounded-2xl border p-5 text-left transition",
-                  selected
-                    ? "border-[#20ad68] bg-[#eefaf4] ring-2 ring-[#20ad68]/15"
-                    : "border-gray-200 bg-white hover:border-[#20ad68]/50 hover:bg-[#fbfdfc]",
-                ].join(" ")}
+                onClick={() => setEnglishGoal(goal.value)}
                 aria-pressed={selected}
+                className={[
+                  "group rounded-2xl border p-5 text-left transition",
+                  selected
+                    ? "border-[var(--mat-green-500)] bg-[var(--mat-green-50)] shadow-[var(--mat-shadow-sm)] ring-2 ring-[var(--mat-focus)]"
+                    : "border-[var(--mat-border)] bg-white hover:border-[var(--mat-border-green)] hover:bg-[var(--mat-surface-soft)]",
+                ].join(" ")}
               >
-                <span className="flex items-start gap-3">
+                <span className="flex items-start gap-3.5">
                   <span
                     className={[
-                      "mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition",
                       selected
-                        ? "border-[#20ad68] bg-[#20ad68] text-white"
-                        : "border-gray-300 bg-white",
+                        ? "border-[var(--mat-green-600)] bg-[var(--mat-green-600)] text-white"
+                        : "border-[var(--mat-border-strong)] bg-white text-transparent group-hover:border-[var(--mat-green-400)]",
                     ].join(" ")}
                   >
-                    {selected ? "✓" : ""}
+                    ✓
                   </span>
 
                   <span>
-                    <span className="block font-semibold text-[#17223b]">
+                    <span className="block font-bold text-[var(--mat-ink)]">
                       {goal.title}
                     </span>
 
-                    <span className="mt-1 block text-sm leading-6 text-gray-500">
+                    <span className="mt-1.5 block text-sm leading-6 text-[var(--mat-muted)]">
                       {goal.description}
                     </span>
                   </span>
@@ -203,58 +195,55 @@ export default function AssessmentForm({
         </div>
       </section>
 
-      <section className="mt-10 border-t border-gray-100 pt-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#20ad68]">
+      <section className="mt-10 border-t border-[var(--mat-border)] pt-10">
+        <p className="mat-eyebrow">
           Your starting point
         </p>
 
-        <h2 className="mt-3 font-display text-3xl text-[#17223b]">
+        <h2 className="mt-3 font-display text-3xl leading-tight text-[var(--mat-ink)]">
           Where would you place your English today?
         </h2>
 
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500">
-          This is only a starting point. Your practice results will
-          help Nina refine what you need over time.
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--mat-muted)]">
+          This is only a starting point. Your practice results will help Nina
+          refine what you need over time.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {LEVELS.map((level) => {
-            const selected =
-              proficiencyLevel === level.value;
+            const selected = proficiencyLevel === level.value;
 
             return (
               <button
                 key={level.value}
                 type="button"
-                onClick={() =>
-                  setProficiencyLevel(level.value)
-                }
-                className={[
-                  "rounded-2xl border p-5 text-left transition",
-                  selected
-                    ? "border-[#20ad68] bg-[#eefaf4] ring-2 ring-[#20ad68]/15"
-                    : "border-gray-200 bg-white hover:border-[#20ad68]/50 hover:bg-[#fbfdfc]",
-                ].join(" ")}
+                onClick={() => setProficiencyLevel(level.value)}
                 aria-pressed={selected}
+                className={[
+                  "group rounded-2xl border p-5 text-left transition",
+                  selected
+                    ? "border-[var(--mat-green-500)] bg-[var(--mat-green-50)] shadow-[var(--mat-shadow-sm)] ring-2 ring-[var(--mat-focus)]"
+                    : "border-[var(--mat-border)] bg-white hover:border-[var(--mat-border-green)] hover:bg-[var(--mat-surface-soft)]",
+                ].join(" ")}
               >
-                <span className="flex items-start gap-3">
+                <span className="flex items-start gap-3.5">
                   <span
                     className={[
-                      "mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+                      "mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition",
                       selected
-                        ? "border-[#20ad68] bg-[#20ad68] text-white"
-                        : "border-gray-300 bg-white",
+                        ? "border-[var(--mat-green-600)] bg-[var(--mat-green-600)] text-white"
+                        : "border-[var(--mat-border-strong)] bg-white text-transparent group-hover:border-[var(--mat-green-400)]",
                     ].join(" ")}
                   >
-                    {selected ? "✓" : ""}
+                    ✓
                   </span>
 
                   <span>
-                    <span className="block font-semibold text-[#17223b]">
+                    <span className="block font-bold text-[var(--mat-ink)]">
                       {level.title}
                     </span>
 
-                    <span className="mt-1 block text-sm leading-6 text-gray-500">
+                    <span className="mt-1.5 block text-sm leading-6 text-[var(--mat-muted)]">
                       {level.description}
                     </span>
                   </span>
@@ -268,24 +257,24 @@ export default function AssessmentForm({
       {message ? (
         <div
           role="alert"
-          className="mt-7 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+          className="mt-7 rounded-xl border border-[#ead8ad] bg-[var(--mat-gold-soft)] px-5 py-4 text-sm leading-6 text-[#805c25]"
         >
           {message}
         </div>
       ) : null}
 
-      <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-gray-100 pt-7 sm:flex-row sm:items-center">
-        <p className="max-w-xl text-sm leading-6 text-gray-500">
+      <div className="mt-8 flex flex-col items-start justify-between gap-5 border-t border-[var(--mat-border)] pt-7 sm:flex-row sm:items-center">
+        <p className="max-w-xl text-sm leading-6 text-[var(--mat-muted)]">
           You can update these preferences later in Settings.
         </p>
 
         <button
           type="submit"
           disabled={!canContinue}
-          className="inline-flex min-h-12 items-center justify-center rounded-xl bg-[#20ad68] px-7 py-3 font-semibold text-white transition hover:bg-[#168c56] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="mat-button mat-button-primary w-full sm:w-auto"
         >
           {isSubmitting
-            ? "Saving..."
+            ? "Saving…"
             : "See my recommendation"}
         </button>
       </div>

@@ -7,7 +7,7 @@ import {
   getEnrollmentState,
   canAccessDashboard,
 } from "@/lib/auth/enrollment";
-import { getPlan } from "@/lib/payments/plans";
+import { formatMoney, getPlan } from "@/lib/payments/plans";
 
 export async function GET() {
   try {
@@ -71,6 +71,10 @@ export async function GET() {
       ? getPlan(user.selectedPlanId)
       : undefined;
 
+    const billingLabel = plan
+      ? `${formatMoney(plan.priceMinor)}/${plan.interval}`
+      : null;
+
     return NextResponse.json({
       authenticated: true,
       ready: canAccessDashboard(enrollmentState),
@@ -78,6 +82,7 @@ export async function GET() {
       subscriptionStatus: user.subscriptionStatus,
       selectedPlanId: user.selectedPlanId,
       planName: plan ? `Premium ${plan.name}` : null,
+      billingLabel,
       planRenewsAt: user.planRenewsAt,
     });
   } catch (error) {

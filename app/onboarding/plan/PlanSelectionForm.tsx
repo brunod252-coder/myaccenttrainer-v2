@@ -3,34 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-type PlanOption = {
-  id: string;
-  name: string;
-  price: string;
-  cadence: string;
-  description: string;
-  badge?: string;
-  effective?: string;
-};
-
-const plans: PlanOption[] = [
-  {
-    id: "monthly",
-    name: "Premium Monthly",
-    price: "$19.99",
-    cadence: "/month",
-    description: "Flexible monthly access. Cancel anytime.",
-  },
-  {
-    id: "annual",
-    name: "Premium Annual",
-    price: "$199",
-    cadence: "/year",
-    description: "Save $40.88 compared with monthly billing.",
-    badge: "Best value",
-    effective: "$16.58/month effective",
-  },
-];
+import { PLANS, formatMoney } from "@/lib/payments/plans";
 
 export default function PlanSelectionForm({
   initialPlanId,
@@ -38,6 +11,7 @@ export default function PlanSelectionForm({
   initialPlanId?: string | null;
 }) {
   const router = useRouter();
+
   const [selectedPlanId, setSelectedPlanId] = useState(
     initialPlanId || "monthly",
   );
@@ -54,7 +28,9 @@ export default function PlanSelectionForm({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ planId: selectedPlanId }),
+        body: JSON.stringify({
+          planId: selectedPlanId,
+        }),
       });
 
       const data = (await response.json()) as {
@@ -63,50 +39,74 @@ export default function PlanSelectionForm({
       };
 
       if (!response.ok) {
-        setMessage(data.message || "We could not save your selection.");
+        setMessage(
+          data.message ||
+            "We could not save your selection.",
+        );
         return;
       }
 
-      router.push(data.next || "/onboarding/payment");
+      router.push(
+        data.next || "/onboarding/payment",
+      );
       router.refresh();
     } catch {
-      setMessage("We could not reach the server. Please try again.");
+      setMessage(
+        "We could not reach the server. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="mt-8">
+    <div>
       <div className="grid gap-5 md:grid-cols-2">
-        {plans.map((plan) => {
-          const selected = selectedPlanId === plan.id;
+        {PLANS.map((plan) => {
+          const selected =
+            selectedPlanId === plan.id;
+
+          const price =
+            formatMoney(plan.priceMinor);
+
+          const cadence =
+            plan.interval === "month"
+              ? "/month"
+              : "/year";
+
+          const effective =
+            plan.interval === "year"
+              ? `${formatMoney(plan.perMonthMinor)}/month effective`
+              : null;
 
           return (
             <button
               key={plan.id}
               type="button"
-              onClick={() => setSelectedPlanId(plan.id)}
+              onClick={() =>
+                setSelectedPlanId(plan.id)
+              }
+              aria-pressed={selected}
               className={[
-                "relative rounded-3xl border p-6 text-left transition",
+                "group relative rounded-2xl border p-6 text-left transition",
                 selected
-                  ? "border-[#20ad68] bg-[#f4fbf7] shadow-md ring-2 ring-[#20ad68]/15"
-                  : "border-gray-200 bg-white hover:border-[#8bd8b1]",
+                  ? "border-[var(--mat-green-500)] bg-[var(--mat-green-50)] shadow-[var(--mat-shadow-md)] ring-2 ring-[var(--mat-focus)]"
+                  : "border-[var(--mat-border)] bg-white hover:border-[var(--mat-border-green)] hover:shadow-[var(--mat-shadow-sm)]",
               ].join(" ")}
             >
-              {plan.badge ? (
-                <span className="absolute right-5 top-5 rounded-full bg-[#17223b] px-3 py-1 text-xs font-semibold text-white">
-                  {plan.badge}
+              {plan.featured ? (
+                <span className="absolute right-5 top-5 rounded-full bg-[var(--mat-ink)] px-3 py-1 text-[11px] font-bold text-white">
+                  Best value
                 </span>
               ) : null}
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 pr-20">
                 <span
                   className={[
-                    "flex h-5 w-5 items-center justify-center rounded-full border",
+                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition",
                     selected
-                      ? "border-[#20ad68] bg-[#20ad68]"
-                      : "border-gray-300 bg-white",
+                      ? "border-[var(--mat-green-600)] bg-[var(--mat-green-600)]"
+                      : "border-[var(--mat-border-strong)] bg-white group-hover:border-[var(--mat-green-400)]",
                   ].join(" ")}
                 >
                   {selected ? (
@@ -114,34 +114,63 @@ export default function PlanSelectionForm({
                   ) : null}
                 </span>
 
-                <p className="font-display text-xl text-[#17223b]">
-                  {plan.name}
+                <p className="font-display text-xl text-[var(--mat-ink)]">
+                  Premium {plan.name}
                 </p>
               </div>
 
               <div className="mt-6 flex items-end gap-1">
-                <span className="font-display text-4xl text-[#17223b]">
-                  {plan.price}
+                <span className="font-display text-4xl tracking-[-0.025em] text-[var(--mat-ink)]">
+                  {price}
                 </span>
-                <span className="pb-1 text-sm text-gray-500">
-                  {plan.cadence}
+
+                <span className="pb-1 text-sm text-[var(--mat-muted)]">
+                  {cadence}
                 </span>
               </div>
 
-              {plan.effective ? (
-                <p className="mt-2 text-sm font-semibold text-[#168c56]">
-                  {plan.effective}
+              {effective ? (
+                <p className="mt-2 text-sm font-bold text-[var(--mat-green-700)]">
+                  {effective}
                 </p>
               ) : null}
 
-              <p className="mt-4 text-sm leading-6 text-gray-600">
-                {plan.description}
+              {plan.savingsLabel ? (
+                <p className="mt-1 text-xs font-semibold text-[var(--mat-green-700)]">
+                  {plan.savingsLabel}
+                </p>
+              ) : null}
+
+              <p className="mt-4 text-sm leading-6 text-[var(--mat-muted)]">
+                {plan.blurb}
               </p>
 
-              <div className="mt-5 border-t border-gray-100 pt-5 text-sm text-gray-600">
-                <p>✓ Two-day free trial</p>
-                <p className="mt-2">✓ Payment method required</p>
-                <p className="mt-2">✓ Full Premium access during trial</p>
+              <div className="mt-5 space-y-2.5 border-t border-[var(--mat-border)] pt-5">
+                {plan.perks.map((perk) => (
+                  <p
+                    key={perk}
+                    className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]"
+                  >
+                    <span className="font-bold text-[var(--mat-green-600)]">
+                      ✓
+                    </span>
+                    <span>{perk}</span>
+                  </p>
+                ))}
+
+                <p className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]">
+                  <span className="font-bold text-[var(--mat-green-600)]">
+                    ✓
+                  </span>
+                  <span>Two-day free trial</span>
+                </p>
+
+                <p className="flex items-start gap-2.5 text-sm leading-6 text-[var(--mat-muted)]">
+                  <span className="font-bold text-[var(--mat-green-600)]">
+                    ✓
+                  </span>
+                  <span>Payment method required to begin trial</span>
+                </p>
               </div>
             </button>
           );
@@ -149,21 +178,26 @@ export default function PlanSelectionForm({
       </div>
 
       {message ? (
-        <p className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div
+          role="alert"
+          className="mt-5 rounded-xl border border-[#efcccc] bg-[var(--mat-red-soft)] px-4 py-3 text-sm leading-6 text-[var(--mat-red)]"
+        >
           {message}
-        </p>
+        </div>
       ) : null}
 
       <button
         type="button"
         onClick={continueEnrollment}
         disabled={loading}
-        className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-[#20ad68] px-6 py-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mat-button mat-button-primary mt-7 w-full"
       >
-        {loading ? "Saving your plan..." : "Continue to payment method"}
+        {loading
+          ? "Saving your plan…"
+          : "Continue to payment method"}
       </button>
 
-      <p className="mt-4 text-center text-xs leading-5 text-gray-500">
+      <p className="mt-4 text-center text-xs leading-5 text-[var(--mat-muted)]">
         You will not be charged today. Your selected plan begins automatically
         after the two-day trial unless canceled beforehand.
       </p>
