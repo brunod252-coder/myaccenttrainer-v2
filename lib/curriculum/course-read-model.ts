@@ -369,3 +369,98 @@ export async function getLearnerCourseReadModels(
     },
   );
 }
+
+/**
+ * Administrator-facing curriculum inventory.
+ *
+ * Unlike the learner-facing read model, this deliberately includes:
+ * - published and unpublished courses,
+ * - published and unpublished lessons,
+ * - empty modules.
+ *
+ * This provider is read-only. Module publication is intentionally absent
+ * because Module has no publication field in the durable curriculum schema.
+ */
+export interface AdminCurriculumLessonReadModel {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+}
+
+export interface AdminCurriculumModuleReadModel {
+  id: string;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  lessons: AdminCurriculumLessonReadModel[];
+}
+
+export interface AdminCurriculumCourseReadModel {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+  modules: AdminCurriculumModuleReadModel[];
+}
+
+export async function getAdminCurriculumReadModels(): Promise<
+  AdminCurriculumCourseReadModel[]
+> {
+  return prisma.course.findMany({
+    orderBy: [
+      {
+        sortOrder: "asc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      sortOrder: true,
+      isPublished: true,
+      modules: {
+        orderBy: [
+          {
+            sortOrder: "asc",
+          },
+          {
+            id: "asc",
+          },
+        ],
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          sortOrder: true,
+          lessons: {
+            orderBy: [
+              {
+                sortOrder: "asc",
+              },
+              {
+                id: "asc",
+              },
+            ],
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              description: true,
+              sortOrder: true,
+              isPublished: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
