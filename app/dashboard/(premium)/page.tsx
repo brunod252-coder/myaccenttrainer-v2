@@ -3,10 +3,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
-import StatTile from "@/components/app/StatTile";
 import VerifyBanner from "@/components/app/VerifyBanner";
 import ClarityGauge from "@/components/app/ClarityGauge";
-import { CheckCircle, Flame, Book, Clock, Mic, Arrow, Sparkle } from "@/components/ui/icons";
+import { Flame, Book, Mic, Arrow, Sparkle } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import {
   getLearningPath,
@@ -16,8 +15,8 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getMergedLessons, type Lesson } from "@/lib/lessons";
 import { getClarityStats } from "@/lib/pronunciation/attempts";
+import { getAnalytics } from "@/lib/analytics/insights";
 
-const WEEK = [30, 55, 0, 40, 70, 25, 50];
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 
 async function getCompletedSlugs(userId: string): Promise<Set<string>> {
@@ -57,21 +56,19 @@ export default async function DashboardPage() {
   }
 
   const [
-    completedLessons,
     stats,
     completedSlugs,
     allLessons,
     learningProfile,
     learningPath,
+    analytics,
   ] = await Promise.all([
-    prisma.lessonProgress.count({
-      where: { userId: payload.userId, status: "COMPLETED" },
-    }),
     getClarityStats(payload.userId),
     getCompletedSlugs(payload.userId),
     getMergedLessons(),
     getLearningProfile(payload.userId),
     getLearningPath(payload.userId),
+    getAnalytics(payload.userId),
   ]);
 
   const bySlug = new Map(
@@ -91,16 +88,20 @@ export default async function DashboardPage() {
     (lesson) => !completedSlugs.has(lesson.slug),
   );
 
-  const catalogNextLesson =
-    allLessons.find(
-      (lesson) => !completedSlugs.has(lesson.slug),
-    ) ?? allLessons[allLessons.length - 1];
 
-  const nextLesson =
-    missionNextLesson ?? catalogNextLesson;
+  const nextLesson = learningPath.nextLesson;
 
   const nextLessonIsMissionRecommended =
-    Boolean(missionNextLesson);
+    Boolean(
+      missionNextLesson &&
+        nextLesson?.slug === missionNextLesson.slug,
+    );
+
+  const lastSevenDays = analytics.calendar.slice(-7);
+  const maxDailyAttempts = Math.max(
+    1,
+    ...lastSevenDays.map((day) => day.count),
+  );
 
   const allDone =
     completedSlugs.size >= allLessons.length &&
@@ -112,187 +113,384 @@ export default async function DashboardPage() {
   return (
     <AppLayout userName={userName} role={user.role}>
       <VerifyBanner verified={emailVerified} />
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">
-          Your learning plan
-        </p>
-        <h1 className="mt-1 font-display text-3xl text-[#17223b]">
-          Welcome back, {firstName} 👋
-        </h1>
-        <p className="mt-1 text-sm font-medium text-[#52719f]">
-          {learningProfile.level} · {learningProfile.mission.label}
-        </p>
-        <p className="mt-1 max-w-3xl text-sm text-gray-500">
-          {learningProfile.mission.description}
-        </p>
-      </div>
+      <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="p-6 sm:p-8 lg:p-10">
+            <p className="mat-eyebrow">
+              Your learning plan
+            </p>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile
-          label="Clarity score"
-          value={stats.clarity !== null ? String(stats.clarity) : "New"}
-          hint={stats.clarity !== null ? "Improving" : undefined}
-          icon={<CheckCircle className="h-5 w-5" />}
-        />
-        <StatTile
-          label="Day streak"
-          value={`${stats.streakDays} ${stats.streakDays === 1 ? "day" : "days"}`}
-          hint={stats.streakDays > 0 ? "Keep it going" : "Start today"}
-          icon={<Flame className="h-5 w-5" />}
-          iconBg="#fbefd9"
-          iconColor="#c98a2b"
-        />
-        <StatTile
-          label="Lessons completed"
-          value={String(completedLessons)}
-          icon={<Book className="h-5 w-5" />}
-          iconBg="#e9f1f6"
-          iconColor="#52719f"
-        />
-        <StatTile
-          label="Courses available"
-          value={String(learningPath.courses.length)}
-          icon={<Clock className="h-5 w-5" />}
-          iconBg="#e5f3ec"
-          iconColor="#2e7d5b"
-        />
-      </div>
+            <h1 className="mt-3 font-display text-3xl leading-tight text-[var(--mat-ink)] sm:text-4xl">
+              Welcome back, {firstName}.
+            </h1>
+
+            <p className="mt-3 text-sm font-semibold text-[var(--mat-blue)] sm:text-base">
+              {learningProfile.level} · {learningProfile.mission.label}
+            </p>
+
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--mat-muted)]">
+              {learningProfile.mission.description}
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-3">
+              {nextLesson ? (
+                <Link
+                  href={`/dashboard/lesson/${nextLesson.slug}`}
+                  className="mat-button mat-button-primary"
+                >
+                  <Mic className="h-4 w-4" />
+                  Continue learning
+                </Link>
+              ) : (
+                <Link
+                  href="/dashboard/courses"
+                  className="mat-button mat-button-primary"
+                >
+                  <Book className="h-4 w-4" />
+                  View my learning
+                </Link>
+              )}
+
+              <Link
+                href="/dashboard/nina"
+                className="mat-button mat-button-secondary"
+              >
+                <Sparkle className="h-4 w-4 text-[var(--mat-green-700)]" />
+                Nina&apos;s guidance
+              </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-6 sm:p-8 lg:border-l lg:border-t-0">
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted)]">
+              Learning path
+            </p>
+
+            <div className="mt-4 flex items-end justify-between gap-4">
+              <div>
+                <p className="font-display text-4xl text-[var(--mat-ink)]">
+                  {learningPath.percentComplete}%
+                </p>
+
+                <p className="mt-1 text-sm text-[var(--mat-muted)]">
+                  {learningPath.completedLessons} of{" "}
+                  {learningPath.totalLessons} lessons complete
+                </p>
+              </div>
+
+              <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                {learningPath.totalLessons === 0
+                  ? "Getting started"
+                  : learningPath.completedLessons === learningPath.totalLessons
+                    ? "Path complete"
+                    : "In progress"}
+              </span>
+            </div>
+
+            <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-white">
+              <div
+                className="h-full rounded-full bg-[var(--mat-green-700)]"
+                style={{
+                  width: `${learningPath.percentComplete}%`,
+                }}
+              />
+            </div>
+
+            <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-[var(--mat-border)] bg-white p-3">
+                <div className="flex items-center gap-1.5 text-[var(--mat-gold)]">
+                  <Flame className="h-4 w-4" />
+                  <strong className="text-sm text-[var(--mat-ink)]">
+                    {stats.streakDays}
+                  </strong>
+                </div>
+                <p className="mt-1 text-[11px] leading-4 text-[var(--mat-muted)]">
+                  day streak
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[var(--mat-border)] bg-white p-3">
+                <strong className="text-sm text-[var(--mat-ink)]">
+                  {learningPath.completedLessons}
+                </strong>
+                <p className="mt-1 text-[11px] leading-4 text-[var(--mat-muted)]">
+                  lessons done
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[var(--mat-border)] bg-white p-3">
+                <strong className="text-sm text-[var(--mat-ink)]">
+                  {learningPath.courses.length}
+                </strong>
+                <p className="mt-1 text-[11px] leading-4 text-[var(--mat-muted)]">
+                  courses
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h2 className="font-display text-lg text-[#17223b]">Continue your path</h2>
-            <span className="rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">
-              {allDone
-                ? "All caught up"
-                : nextLessonIsMissionRecommended
-                  ? "Nina recommends"
-                  : "Next lesson"}
-            </span>
-          </div>
+        <div className="space-y-5">
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="mat-eyebrow">
+                  Up next
+                </p>
 
-          <Link
-            href={`/dashboard/lesson/${nextLesson.slug}`}
-            className="mt-4 flex items-center gap-4 rounded-xl border border-transparent p-3 transition hover:border-[#d7f2e7] hover:bg-[#f6faf8]"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#e9f8f3] text-2xl">
-              🗣️
+                <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+                  {nextLesson
+                    ? nextLesson.title
+                    : allDone
+                      ? "You&apos;re caught up"
+                      : "Your learning path"}
+                </h2>
+              </div>
+
+              {nextLesson ? (
+                <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                  {allDone
+                    ? "Available to revisit"
+                    : nextLessonIsMissionRecommended
+                      ? "Nina recommends"
+                      : "Recommended next"}
+                </span>
+              ) : null}
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-[#17223b]">
-                {nextLesson.title} — {nextLesson.subtitle}
-              </p>
-              <p className="text-sm text-gray-500">
-                {allDone ? "Revisit any time" : `${nextLesson.difficulty} · about ${nextLesson.estimatedMinutes} min`}
-              </p>
-            </div>
-            <Arrow className="h-5 w-5 text-[#20ad68]" />
-          </Link>
 
-          <Link
-            href={`/dashboard/lesson/${nextLesson.slug}`}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#20ad68] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357]"
-          >
-            <Mic className="h-[18px] w-[18px]" /> {allDone ? "Practice again" : "Practice with Nina"}
-          </Link>
+            {nextLesson ? (
+              <>
+                <p className="mt-3 text-sm font-semibold text-[var(--mat-blue)]">
+                  {nextLesson.courseTitle} · {nextLesson.moduleTitle}
+                </p>
 
-          <div className="mt-6 border-t border-gray-100 pt-5">
-            <p className="text-sm font-semibold text-[#52719f]">This week</p>
-            <div className="mt-3 flex items-end gap-3" style={{ height: 120 }}>
-              {WEEK.map((v, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center justify-end gap-2" style={{ height: "100%" }}>
-                  <div
-                    className="w-full max-w-[26px] rounded-t-md bg-gradient-to-b from-[#20ad68] to-[#178a57]"
-                    style={{ height: `${v}%` }}
-                  />
-                  <span className="text-[11px] font-semibold text-gray-400">{DAYS[i]}</span>
+                {nextLesson.description ? (
+                  <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)]">
+                    {nextLesson.description}
+                  </p>
+                ) : null}
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {nextLesson.difficulty ? (
+                    <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                      {nextLesson.difficulty}
+                    </span>
+                  ) : null}
+
+                  {nextLesson.estimatedMinutes !== null ? (
+                    <span className="mat-pill bg-[var(--mat-blue-soft)] text-[var(--mat-blue)]">
+                      about {nextLesson.estimatedMinutes} min
+                    </span>
+                  ) : null}
                 </div>
-              ))}
-            </div>
-            {stats.attempts === 0 && (
-              <p className="mt-3 text-xs text-gray-400">
-                Sample activity — your real practice will show here as you record with Nina.
-              </p>
+
+                <Link
+                  href={`/dashboard/lesson/${nextLesson.slug}`}
+                  className="mat-button mat-button-primary mt-6"
+                >
+                  <Mic className="h-4 w-4" />
+                  {allDone ? "Practice again" : "Practice with Nina"}
+                  <Arrow className="h-4 w-4" />
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--mat-muted)]">
+                  {allDone
+                    ? "You have completed every lesson currently available. You can revisit your learning path whenever you want more practice."
+                    : "There is no published next lesson available yet. Your learning path will update as curriculum becomes available."}
+                </p>
+
+                <Link
+                  href="/dashboard/courses"
+                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[var(--mat-green-800)]"
+                >
+                  View my learning
+                  <Arrow className="h-4 w-4" />
+                </Link>
+              </>
             )}
-          </div>
+          </section>
+
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted)]">
+                  Practice rhythm
+                </p>
+
+                <h2 className="mt-2 font-display text-xl text-[var(--mat-ink)]">
+                  Last seven days
+                </h2>
+
+                <p className="mt-1 text-sm text-[var(--mat-muted)]">
+                  {analytics.hasData
+                    ? "Your actual recording activity with Nina."
+                    : "Your practice activity will appear here after your first recording."}
+                </p>
+              </div>
+
+              <Link
+                href="/dashboard/progress"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--mat-green-800)]"
+              >
+                Full progress
+                <Arrow className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div
+              className="mt-6 flex items-end gap-3"
+              style={{ height: 128 }}
+            >
+              {lastSevenDays.map((day, i) => {
+                const height =
+                  day.count > 0
+                    ? Math.max(
+                        18,
+                        Math.round(
+                          (day.count / maxDailyAttempts) * 100,
+                        ),
+                      )
+                    : 4;
+
+                return (
+                  <div
+                    key={day.date}
+                    className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                  >
+                    <span className="text-[11px] font-semibold text-[var(--mat-muted)]">
+                      {day.count > 0 ? day.count : ""}
+                    </span>
+
+                    <div
+                      title={`${day.date}: ${day.count} ${
+                        day.count === 1 ? "recording" : "recordings"
+                      }`}
+                      className={
+                        day.count > 0
+                          ? "w-full max-w-[30px] rounded-t-lg bg-[var(--mat-green-700)]"
+                          : "w-full max-w-[30px] rounded-t-lg bg-[var(--mat-border)]"
+                      }
+                      style={{ height: `${height}%` }}
+                    />
+
+                    <span className="text-[11px] font-bold text-[var(--mat-muted)]">
+                      {DAYS[i]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg text-[#17223b]">Clarity</h2>
-              <span className="rounded-full bg-[#e9f1f6] px-2.5 py-1 text-xs font-semibold text-[#52719f]">
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted)]">
+                  Speaking clarity
+                </p>
+                <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+                  Your clarity score
+                </h2>
+              </div>
+
+              <span className="mat-pill bg-[var(--mat-blue-soft)] text-[var(--mat-blue)]">
                 {stats.clarity !== null ? "Improving" : "Getting started"}
               </span>
             </div>
-            <div className="mt-2">
+
+            <div className="mt-3">
               <ClarityGauge value={stats.clarity} />
             </div>
-            <p className="mt-2 text-center text-sm text-gray-500">
+
+            <p className="mt-2 text-center text-sm leading-6 text-[var(--mat-muted)]">
               {stats.clarity !== null
-                ? `Based on your last ${Math.min(5, stats.attempts)} attempts. Keep practicing to raise it.`
+                ? `Based on your last ${Math.min(5, stats.attempts)} attempts. Keep practicing to improve it.`
                 : "Record your first practice with Nina to unlock your clarity score."}
             </p>
-          </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="font-display text-lg text-[#17223b]">
-              Your starting priorities
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Nina is prioritizing these pronunciation lessons for your{" "}
-              {learningProfile.mission.shortLabel} goal.
+            <Link
+              href="/dashboard/practice"
+              className="mt-4 flex items-center justify-center gap-1 text-sm font-semibold text-[var(--mat-green-800)]"
+            >
+              Practice pronunciation
+              <Arrow className="h-4 w-4" />
+            </Link>
+          </section>
+
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)]">
+            <p className="mat-eyebrow">
+              Personalized priorities
             </p>
 
-            <div className="mt-4 space-y-3">
+            <h2 className="mt-2 font-display text-xl text-[var(--mat-ink)]">
+              Focused on your {learningProfile.mission.shortLabel} goal
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+              Nina is prioritizing these lessons from your existing curriculum.
+            </p>
+
+            <div className="mt-5 space-y-2">
               {missionRecommendedLessons.map((lesson, index) => (
                 <Link
                   key={lesson.slug}
                   href={`/dashboard/lesson/${lesson.slug}`}
-                  className="flex items-center gap-3 rounded-xl border border-transparent p-2 transition hover:border-[#d7f2e7] hover:bg-[#f6faf8]"
+                  className="flex items-center gap-3 rounded-xl border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-3 transition hover:border-[var(--mat-border-green)] hover:bg-[var(--mat-green-50)]"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e9f8f3] text-sm font-semibold text-[#168c56]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--mat-green-100)] text-sm font-bold text-[var(--mat-green-700)]">
                     {index + 1}
-                  </div>
+                  </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#17223b]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-[var(--mat-ink)]">
                       {lesson.subtitle}
-                    </p>
-                    <p className="text-xs text-gray-500">
+                    </span>
+
+                    <span className="mt-0.5 block text-xs text-[var(--mat-muted)]">
                       {completedSlugs.has(lesson.slug)
                         ? "Completed"
-                        : lesson.slug === nextLesson.slug &&
+                        : nextLesson?.slug === lesson.slug &&
                             nextLessonIsMissionRecommended
                           ? "Recommended next"
                           : "In your learning plan"}
-                    </p>
-                  </div>
+                    </span>
+                  </span>
 
-                  <Arrow className="h-4 w-4 shrink-0 text-[#20ad68]" />
+                  <Arrow className="h-4 w-4 shrink-0 text-[var(--mat-green-700)]" />
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
         </div>
       </div>
 
       <Link
         href="/dashboard/nina"
-        className="mt-6 flex items-center gap-4 rounded-2xl border border-[#d7f2e7] bg-gradient-to-br from-[#0f2a20] to-[#17223b] p-6 text-white shadow-sm transition hover:brightness-110"
+        className="mt-6 flex items-center gap-4 rounded-[var(--mat-radius-xl)] border border-[var(--mat-green-700)] bg-[var(--mat-green-800)] p-6 text-white shadow-[var(--mat-shadow-sm)] transition hover:bg-[var(--mat-green-900)]"
       >
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl">🤖</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#7fe3ac]">
-            <Sparkle className="h-4 w-4" /> Nina&apos;s memory
-          </div>
-          <p className="mt-1 text-sm text-white/80">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-[var(--mat-green-200)]">
+          <Sparkle className="h-6 w-6" />
+        </span>
+
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-green-200)]">
+            Nina&apos;s memory
+          </span>
+
+          <span className="mt-1 block text-sm leading-6 text-white/75">
             {stats.attempts > 0
-              ? "See what Nina remembers about your voice — personal bests, your weakest sounds, and what to practice next."
-              : "Once you record, Nina starts remembering your voice and coaching you personally. Take a look at what she'll track."}
-          </p>
-        </div>
-        <Arrow className="h-5 w-5 flex-shrink-0 text-[#7fe3ac]" />
+              ? "See what Nina remembers about your voice, your strongest and weakest sounds, and what to practice next."
+              : "Once you record, Nina starts building your personal speaking history and coaching context."}
+          </span>
+        </span>
+
+        <Arrow className="h-5 w-5 shrink-0 text-[var(--mat-green-200)]" />
       </Link>
     </AppLayout>
   );
