@@ -1,60 +1,135 @@
-import AdminLayout from "@/components/admin/AdminLayout";
-import ListManager from "@/components/admin/ListManager";
-import LessonManager from "@/components/admin/LessonManager";
-import PricingForm from "@/components/admin/PricingForm";
-import { requireAdmin } from "@/lib/auth/admin";
-import { getFaqs, getNews, getCourses, getSettings } from "@/lib/content/content";
-import { listCustomLessons } from "@/lib/lessons/custom";
+import Link from "next/link";
 
-export default async function AdminContent() {
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminWorkspace from "@/components/admin/AdminWorkspace";
+import { requireAdmin } from "@/lib/auth/admin";
+
+const workspaces = [
+  {
+    href: "/admin/courses",
+    eyebrow: "Catalog",
+    title: "Courses",
+    description:
+      "Create, publish, hide, and remove course catalog entries.",
+    action: "Open Courses",
+  },
+  {
+    href: "/admin/modules",
+    eyebrow: "Curriculum",
+    title: "Modules",
+    description:
+      "Inspect the durable Course → Module → Lesson structure and ordering.",
+    action: "Open Modules",
+  },
+  {
+    href: "/admin/lessons",
+    eyebrow: "Learning content",
+    title: "Lessons",
+    description:
+      "Create and manage custom lessons, publication state, ordering, and lesson audio.",
+    action: "Open Lessons",
+  },
+  {
+    href: "/admin/news",
+    eyebrow: "Public content",
+    title: "News",
+    description:
+      "Create, publish, hide, and remove public news and announcement entries.",
+    action: "Open News",
+  },
+  {
+    href: "/admin/faq",
+    eyebrow: "Public content",
+    title: "FAQ",
+    description:
+      "Create, publish, hide, and remove questions shown on the public FAQ page.",
+    action: "Open FAQ",
+  },
+  {
+    href: "/admin/pricing",
+    eyebrow: "Public content",
+    title: "Pricing",
+    description:
+      "Manage pricing-page headline and subtitle copy without changing plan amounts.",
+    action: "Open Pricing",
+  },
+] as const;
+
+export default async function AdminContentPage() {
   const admin = await requireAdmin();
-  const [faqs, news, courses, settings, customLessons] = await Promise.all([
-    getFaqs({ adminAll: true }),
-    getNews({ adminAll: true }),
-    getCourses(),
-    getSettings(),
-    listCustomLessons({ adminAll: true }),
-  ]);
-  const adminName = [admin.firstName, admin.lastName].filter(Boolean).join(" ") || admin.email;
+
+  const adminName =
+    [admin.firstName, admin.lastName].filter(Boolean).join(" ") ||
+    admin.email;
 
   return (
     <AdminLayout admin={{ name: adminName }}>
-      <h1 className="font-display text-3xl text-[#17223b]">Content</h1>
-      <p className="mt-1 text-sm text-gray-500">Manage what appears on your public pages — no code required. Empty lists fall back to sensible defaults.</p>
+      <AdminWorkspace
+        eyebrow="Content operations"
+        title="Content"
+        description="Use the dedicated administration workspaces below as the canonical destinations for curriculum and public-content operations."
+      >
+        <div className="space-y-6">
+          <aside className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5 sm:p-6">
+            <p className="mat-eyebrow">Canonical workspaces</p>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-2">
-        <ListManager
-          endpoint="/api/admin/content/faq"
-          heading="FAQ"
-          blurb="Questions shown on the public FAQ page."
-          fields={[{ name: "question", label: "Question" }, { name: "answer", label: "Answer", textarea: true }]}
-          items={faqs.map((f) => ({ id: f.id, published: f.published, question: f.question, answer: f.answer }))}
-          publishKey="published"
-        />
-        <ListManager
-          endpoint="/api/admin/content/news"
-          heading="News"
-          blurb="Announcements shown on the public News page."
-          fields={[{ name: "title", label: "Title" }, { name: "excerpt", label: "Excerpt", textarea: true }, { name: "dateLabel", label: "Date label (e.g. “June 2026”)" }]}
-          items={news.map((n) => ({ id: n.id, published: n.published, title: n.title, excerpt: n.excerpt, dateLabel: n.dateLabel }))}
-          publishKey="published"
-        />
-        <ListManager
-          endpoint="/api/admin/content/course"
-          heading="Courses"
-          blurb="Course catalog entries."
-          fields={[{ name: "title", label: "Title" }, { name: "description", label: "Description", textarea: true }]}
-          items={courses.map((c) => ({ id: c.id, published: c.isPublished, title: c.title, description: c.description || "" }))}
-          publishKey="isPublished"
-        />
-        <PricingForm headline={settings.pricing_headline} subtitle={settings.pricing_subtitle} />
+            <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+              One management surface per responsibility
+            </h2>
 
-        <div className="lg:col-span-2">
-          <LessonManager
-            items={customLessons.map((l) => ({ id: l.id, subtitle: l.subtitle, referenceText: l.referenceText, focus: l.focus, description: l.description, published: l.published, hasAudio: Boolean(l.audioBase64) }))}
-          />
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--mat-muted)]">
+              Content operations are separated into focused workspaces so the
+              same records are not administered from multiple competing
+              screens.
+            </p>
+
+            <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--mat-muted-light)]">
+              Modules is intentionally a read-only curriculum structure view.
+              Pricing manages public pricing-page copy; plan amounts and
+              billing identifiers remain outside that workspace.
+            </p>
+          </aside>
+
+          <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {workspaces.map((workspace) => (
+              <Link
+                key={workspace.href}
+                href={workspace.href}
+                className="group flex min-h-56 flex-col rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-5 shadow-[var(--mat-shadow-sm)] transition hover:-translate-y-0.5 hover:border-[var(--mat-border-green)] hover:shadow-[var(--mat-shadow-md)] sm:p-6"
+              >
+                <p className="mat-eyebrow">{workspace.eyebrow}</p>
+
+                <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+                  {workspace.title}
+                </h2>
+
+                <p className="mt-3 flex-1 text-sm leading-6 text-[var(--mat-muted)]">
+                  {workspace.description}
+                </p>
+
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--mat-green-700)]">
+                  {workspace.action}
+                  <span aria-hidden="true">→</span>
+                </span>
+              </Link>
+            ))}
+          </section>
+
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-5 shadow-[var(--mat-shadow-sm)] sm:p-6">
+            <p className="mat-eyebrow">Operating boundary</p>
+
+            <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+              Content hub, not a second editor
+            </h2>
+
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--mat-muted)]">
+              This page provides navigation only. Creating, publishing,
+              updating, ordering, or removing content happens inside the
+              corresponding dedicated workspace.
+            </p>
+          </section>
         </div>
-      </div>
+      </AdminWorkspace>
     </AdminLayout>
   );
 }
