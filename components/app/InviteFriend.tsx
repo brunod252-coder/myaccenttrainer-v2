@@ -1,108 +1,219 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function InviteFriend({ referralCode }: { referralCode: string }) {
+type Props = {
+  referralCode: string;
+};
+
+type InviteState =
+  | { kind: "idle" }
+  | { kind: "error"; message: string }
+  | { kind: "success"; message: string };
+
+export default function InviteFriend({ referralCode }: Props) {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [copied, setCopied] = useState(false);
-  const [message, setMessage] = useState("");
-  const [devLink, setDevLink] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [state, setState] = useState<InviteState>({ kind: "idle" });
 
-  async function invite(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setStatus("sending");
-    setMessage("");
+  const referralLink = useMemo(() => {
+    if (typeof window === "undefined") {
+      return `https://myaccenttrainer.com/register?ref=${encodeURIComponent(
+        referralCode,
+      )}`;
+    }
+
+    return `${window.location.origin}/register?ref=${encodeURIComponent(
+      referralCode,
+    )}`;
+  }, [referralCode]);
+
+  async function copyReferralLink() {
+    if (copying) return;
+
+    setCopying(true);
+    setState({ kind: "idle" });
+
     try {
-      const res = await fetch("/api/referrals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ friendEmail: email, friendName: name || undefined }),
+      await navigator.clipboard.writeText(referralLink);
+
+      setState({
+        kind: "success",
+        message: "Referral link copied.",
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setStatus("error");
-        setMessage(data.message || "Could not send the invite.");
-        return;
-      }
-      if (data.devLink) setDevLink(data.devLink);
-      setStatus("sent");
-      setEmail("");
-      setName("");
-      router.refresh();
     } catch {
-      setStatus("error");
-      setMessage("Could not send the invite. Please try again.");
+      setState({
+        kind: "error",
+        message: "Unable to copy the referral link on this device.",
+      });
+    } finally {
+      setCopying(false);
     }
   }
 
-  function copyCode() {
-    if (typeof navigator !== "undefined" && navigator.clipboard) {
-      const link = `${window.location.origin}/register?ref=${encodeURIComponent(referralCode)}`;
-      navigator.clipboard.writeText(link).then(
-        () => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1800);
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (submitting) return;
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setState({
+        kind: "error",
+        message: "Enter the email address of the person you want to invite.",
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    setState({ kind: "idle" });
+
+    try {
+      const response = await fetch("/api/referrals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        () => {},
-      );
+        body: JSON.stringify({
+          email: normalizedEmail,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok || !data.ok) {
+        throw new Error(
+          data.error || data.message || "Unable to send this invitation.",
+        );
+      }
+
+      setEmail("");
+
+      setState({
+        kind: "success",
+        message: data.message || "Invitation sent.",
+      });
+
+      router.refresh();
+    } catch (err) {
+      setState({
+        kind: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Unable to send this invitation. Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
     }
   }
-
-  const inputClass =
-    "w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20";
 
   return (
-    <>
-      <div className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-[#a9cfbc] bg-[#f0faf6] px-5 py-4">
-        <span className="font-display text-2xl tracking-wide text-[#168c56]">{referralCode}</span>
-        <button
-          type="button"
-          onClick={copyCode}
-          className="rounded-lg bg-[#20ad68] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#169357]"
+    <div className="mt-6 space-y-6">
+      <div>
+        <label
+          htmlFor="referral-link"
+          className="text-sm font-semibold text-[var(--mat-ink)]"
         >
-          {copied ? "Link copied ✓" : "Copy link"}
-        </button>
+          Personal referral link
+        </label>
+
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+          <input
+            id="referral-link"
+            type="text"
+            value={referralLink}
+            readOnly
+            aria-label="Personal referral link"
+            className="mat-input min-w-0 flex-1"
+          />
+
+          <button
+            type="button"
+            onClick={copyReferralLink}
+            disabled={copying}
+            className="mat-button mat-button-secondary shrink-0 justify-center disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {copying ? "Copying…" : "Copy link"}
+          </button>
+        </div>
       </div>
 
-      <form onSubmit={invite} className="mt-5">
-        <p className="text-sm font-semibold text-gray-700">Invite a friend by email</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+      <div className="flex items-center gap-3" aria-hidden="true">
+        <div className="h-px flex-1 bg-[var(--mat-border)]" />
+        <span className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-muted-light)]">
+          or invite by email
+        </span>
+        <div className="h-px flex-1 bg-[var(--mat-border)]" />
+      </div>
+
+      <form onSubmit={submit}>
+        <label
+          htmlFor="referral-email"
+          className="text-sm font-semibold text-[var(--mat-ink)]"
+        >
+          Friend&apos;s email
+        </label>
+
+        <div className="mt-2 flex flex-col gap-3 sm:flex-row">
           <input
-            className={inputClass}
-            type="text"
-            placeholder="Friend's name (optional)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className={inputClass}
+            id="referral-email"
             type="email"
-            required
-            placeholder="friend@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => {
+              setEmail(event.target.value);
+
+              if (state.kind !== "idle") {
+                setState({ kind: "idle" });
+              }
+            }}
+            autoComplete="email"
+            required
+            disabled={submitting}
+            placeholder="friend@example.com"
+            className="mat-input min-w-0 flex-1"
           />
-        </div>
-        <div className="mt-3 flex items-center gap-3">
+
           <button
             type="submit"
-            disabled={status === "sending"}
-            className="rounded-lg bg-[#20ad68] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:opacity-60"
+            disabled={submitting}
+            className="mat-button mat-button-primary shrink-0 justify-center disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {status === "sending" ? "Sending…" : "Send invite"}
+            {submitting ? "Sending…" : "Send invitation"}
           </button>
-          {status === "sent" && (
-            <span className="text-sm font-medium text-[#2e7d5b]">
-              Invite sent ✓{devLink && (<> · <a href={devLink} className="underline">open link (dev)</a></>)}
-            </span>
-          )}
-          {status === "error" && <span className="text-sm font-medium text-[#d1495b]">{message}</span>}
         </div>
+
+        <p className="mt-2 text-xs leading-5 text-[var(--mat-muted-light)]">
+          Sending an invitation does not itself issue referral credit.
+        </p>
       </form>
-    </>
+
+      {state.kind === "error" && (
+        <div
+          role="alert"
+          className="rounded-[var(--mat-radius-lg)] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+        >
+          {state.message}
+        </div>
+      )}
+
+      {state.kind === "success" && (
+        <div
+          role="status"
+          className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-4 text-sm leading-6 text-[var(--mat-green-800)]"
+        >
+          {state.message}
+        </div>
+      )}
+    </div>
   );
 }
