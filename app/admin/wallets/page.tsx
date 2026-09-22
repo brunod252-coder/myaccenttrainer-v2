@@ -65,41 +65,43 @@ export default async function AdminWalletsPage({
 
   return (
     <AdminLayout admin={{ name: adminName }}>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#20ad68]">
-          Finance
-        </p>
+      <div className="space-y-6">
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-8">
+          <p className="mat-eyebrow">Finance</p>
 
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl text-[#17223b] sm:text-4xl">
-              Wallets
+            <h1 className="font-display text-3xl text-[var(--mat-ink)] sm:text-4xl">
+              Wallet administration
             </h1>
 
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-500">
-              Review balances, inspect ledger activity, and issue audited
-              administrative adjustments.
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--mat-muted)] sm:text-base">
+              Review ledger-derived wallet balances, inspect recent transaction
+              activity, and access the existing administrative adjustment workflow.
             </p>
           </div>
 
-          <div className="rounded-xl border border-[#ccebdd] bg-[#effaf5] px-4 py-3 text-sm">
-            <span className="text-gray-500">Platform wallet balance</span>
-            <span className="ml-3 font-bold text-[#168c56]">
+          <div className="w-fit rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--mat-muted-light)]">
+              Returned-wallet balance total
+            </p>
+            <p className="mt-1 font-display text-2xl text-[var(--mat-green-700)]">
               {money(totalBalanceMinor)}
-            </span>
+            </p>
           </div>
         </div>
+        </section>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <StatCard label="Wallet users" value={String(users.length)} />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard label="Returned accounts" value={String(users.length)} />
 
           <StatCard
-            label="Ledger transactions"
+            label="Returned ledger entries"
             value={String(totalTransactions)}
           />
 
           <StatCard
-            label="Selected balance"
+            label="Selected wallet balance"
             value={
               detail
                 ? money(detail.wallet.balanceMinor, detail.wallet.currencyCode)
@@ -108,30 +110,65 @@ export default async function AdminWalletsPage({
           />
         </div>
 
-        <form action="/admin/wallets" method="get" className="mt-6">
-          <input
-            name="q"
-            defaultValue={q || ""}
-            placeholder="Search users by name or email…"
-            className="w-full max-w-md rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#20ad68]"
-          />
-        </form>
+        <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-5 shadow-[var(--mat-shadow-sm)] sm:p-6">
+          <form action="/admin/wallets" method="get">
+            <label
+              htmlFor="wallet-account-search"
+              className="text-sm font-semibold text-[var(--mat-ink)]"
+            >
+              Search wallet accounts
+            </label>
 
-        <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="font-display text-xl text-[#17223b]">
-                User wallets
+            <p className="mt-1 text-xs leading-5 text-[var(--mat-muted)]">
+              Search the administrative wallet directory by name or email.
+            </p>
+
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+              <input
+                id="wallet-account-search"
+                name="q"
+                defaultValue={q || ""}
+                placeholder="Name or email"
+                autoComplete="off"
+                className="w-full flex-1 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-white px-4 py-2.5 text-sm text-[var(--mat-ink)] outline-none transition placeholder:text-[var(--mat-muted-light)] focus:border-[var(--mat-green-700)] focus:ring-2 focus:ring-[var(--mat-green-50)]"
+              />
+
+              <button
+                type="submit"
+                className="mat-button mat-button-primary sm:w-auto"
+              >
+                Search
+              </button>
+
+              {q ? (
+                <Link
+                  href="/admin/wallets"
+                  className="mat-button mat-button-secondary sm:w-auto"
+                >
+                  Clear
+                </Link>
+              ) : null}
+            </div>
+          </form>
+        </section>
+
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+            <div className="border-b border-[var(--mat-border)] px-5 py-5 sm:px-6">
+              <p className="mat-eyebrow">Directory</p>
+
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Wallet accounts
               </h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                Select a user to inspect and manage their wallet.
+                Select an account to inspect its wallet and ledger activity.
               </p>
             </div>
 
             {users.length === 0 ? (
               <div className="p-10 text-center text-sm text-gray-500">
-                No users found.
+                No wallet accounts returned.
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -207,20 +244,18 @@ export default async function AdminWalletsPage({
           </section>
 
           {detail ? (
-            <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#20ad68]">
-                Selected wallet
-              </p>
+            <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)]">
+              <p className="mat-eyebrow">Selected wallet</p>
 
-              <h2 className="mt-2 font-display text-2xl text-[#17223b]">
+              <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
                 {detail.user.name}
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">{detail.user.email}</p>
+              <p className="mt-1 break-all text-sm text-[var(--mat-muted)]">{detail.user.email}</p>
 
-              <div className="mt-5 rounded-2xl bg-[#111c30] p-5 text-white">
-                <p className="text-xs uppercase tracking-[0.18em] text-white/50">
-                  Available balance
+              <div className="mt-5 rounded-[var(--mat-radius-xl)] bg-[var(--mat-ink)] p-5 text-white">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/50">
+                  Wallet balance
                 </p>
 
                 <p className="mt-2 font-display text-4xl">
@@ -230,8 +265,8 @@ export default async function AdminWalletsPage({
                   )}
                 </p>
 
-                <p className="mt-2 text-xs text-white/45">
-                  Balance derived from the full ledger
+                <p className="mt-2 text-xs leading-5 text-white/50">
+                  Balance derived from the full stored ledger
                 </p>
               </div>
 
@@ -244,20 +279,22 @@ export default async function AdminWalletsPage({
             </section>
           ) : (
             <section className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center text-sm text-gray-500">
-              Select a user to manage their wallet.
+              Select an account to inspect its wallet.
             </section>
           )}
         </div>
 
         {detail && (
-          <section className="mt-6 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="font-display text-xl text-[#17223b]">
-                Recent ledger activity
+          <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+            <div className="border-b border-[var(--mat-border)] px-5 py-5 sm:px-6">
+              <p className="mat-eyebrow">Ledger</p>
+
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Recent wallet ledger activity
               </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Latest transactions for {detail.user.email}.
+              <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+                Latest stored transactions returned for {detail.user.email}.
               </p>
             </div>
 
@@ -319,6 +356,25 @@ export default async function AdminWalletsPage({
             )}
           </section>
         )}
+
+        <aside className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5 sm:p-6">
+          <p className="text-sm font-semibold text-[var(--mat-ink)]">
+            Wallet administration boundary
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+            Wallet balances shown here are derived from stored ledger
+            transactions. Administrative credits and debits append adjustment
+            entries; this interface does not overwrite wallet balances
+            directly.
+          </p>
+
+          <p className="mt-3 text-xs leading-5 text-[var(--mat-muted-light)]">
+            Summary totals describe only the accounts returned by the existing
+            administrative wallet provider. They are not a separate accounting
+            or settlement balance.
+          </p>
+        </aside>
       </div>
     </AdminLayout>
   );
