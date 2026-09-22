@@ -24,9 +24,12 @@ export default function RegisterForm() {
 
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("ref");
+
     // The referral code originates from the browser URL after hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (r) setReferralCode(r);
+    if (r) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setReferralCode(r);
+    }
   }, []);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -68,56 +71,84 @@ export default function RegisterForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
-    >
-            {referralCode && (
-        <div className="mb-6 rounded-lg border border-[#cdeee1] bg-[#f0faf6] p-3 text-sm text-[#168c56]">
-          🎁 You were invited! You and your friend each get $10 in learning credit when you join.
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {referralCode ? (
+        <div className="rounded-xl border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] px-4 py-3 text-sm leading-6 text-[var(--mat-green-700)]">
+          <span className="font-bold">You were invited.</span>{" "}
+          Your referral is attached to this account. Eligible referral rewards
+          are added as learning credit after the qualifying subscription payment.
         </div>
-      )}
-      {message && (
+      ) : null}
+
+      {message ? (
         <div
-          className={
-            "mb-6 rounded-lg border p-3 text-sm " +
-            (isError
-              ? "border-red-200 bg-red-50 text-red-700"
-              : "border-[#cdeee1] bg-[#e9f8f3] text-[#168c56]")
-          }
+          role={isError ? "alert" : "status"}
+          className={[
+            "rounded-xl border px-4 py-3 text-sm leading-6",
+            isError
+              ? "border-[#efcccc] bg-[var(--mat-red-soft)] text-[var(--mat-red)]"
+              : "border-[var(--mat-border-green)] bg-[var(--mat-green-50)] text-[var(--mat-green-700)]",
+          ].join(" ")}
         >
           {message}
         </div>
-      )}
+      ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="First name" name="firstName" />
-        <Field label="Last name" name="lastName" />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field
+          label="First name"
+          name="firstName"
+          autoComplete="given-name"
+        />
+
+        <Field
+          label="Last name"
+          name="lastName"
+          autoComplete="family-name"
+        />
       </div>
 
-      <div className="mt-4">
-        <Field label="Email" name="email" type="email" required />
-      </div>
+      <Field
+        label="Email address"
+        name="email"
+        type="email"
+        required
+        autoComplete="email"
+        placeholder="you@example.com"
+      />
 
-      <div className="mt-4">
-        <Field label="Password" name="password" type="password" required />
-      </div>
+      <Field
+        label="Password"
+        name="password"
+        type="password"
+        required
+        autoComplete="new-password"
+        placeholder="Create a password"
+      />
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <Field label="Country of residence" name="countryOfResidence" placeholder="e.g. Canada" />
-        <label className="block text-sm font-semibold text-gray-700">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field
+          label="Country of residence"
+          name="countryOfResidence"
+          autoComplete="country-name"
+          placeholder="e.g. United States"
+        />
+
+        <label className="mat-label">
           Native language
+
           <select
             name="nativeLanguage"
             defaultValue=""
-            className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-normal outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20"
+            className="mat-select mt-2"
           >
             <option value="" disabled>
               Select…
             </option>
-            {LANGUAGES.map((lang) => (
-              <option key={lang} value={lang}>
-                {lang}
+
+            {LANGUAGES.map((language) => (
+              <option key={language} value={language}>
+                {language}
               </option>
             ))}
           </select>
@@ -125,11 +156,17 @@ export default function RegisterForm() {
       </div>
 
       <button
+        type="submit"
         disabled={isSubmitting}
-        className="mt-8 w-full rounded-lg bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:opacity-60"
+        className="mat-button mat-button-primary mt-2 w-full"
       >
         {isSubmitting ? "Creating account…" : "Create account"}
       </button>
+
+      <p className="text-center text-xs leading-5 text-[var(--mat-muted)]">
+        After creating your account, we&apos;ll verify your email and personalize
+        your learning path.
+      </p>
     </form>
   );
 }
@@ -140,24 +177,27 @@ function Field({
   type = "text",
   required = false,
   placeholder,
+  autoComplete,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
   placeholder?: string;
+  autoComplete?: string;
 }) {
   return (
-    <label className="block text-sm font-semibold text-gray-700">
+    <label className="mat-label">
       {label}
+
       <input
         name={name}
         type={type}
         required={required}
         placeholder={placeholder}
-        className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm font-normal outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20"
+        autoComplete={autoComplete}
+        className="mat-input mt-2"
       />
     </label>
   );
 }
-

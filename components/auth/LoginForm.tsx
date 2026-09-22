@@ -42,13 +42,10 @@ export default function LoginForm() {
     }
 
     try {
-      const statusResponse = await fetch(
-        "/api/onboarding/status",
-        {
-          method: "GET",
-          cache: "no-store",
-        },
-      );
+      const statusResponse = await fetch("/api/onboarding/status", {
+        method: "GET",
+        cache: "no-store",
+      });
 
       const status = await statusResponse.json();
 
@@ -97,36 +94,40 @@ export default function LoginForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
-    >
-      {message && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {message ? (
+        <div
+          role="alert"
+          className="rounded-xl border border-[#efcccc] bg-[var(--mat-red-soft)] px-4 py-3 text-sm leading-6 text-[var(--mat-red)]"
+        >
           {message}
         </div>
-      )}
+      ) : null}
 
-      <label className="block text-sm font-semibold text-gray-700">
-        Email
+      <label className="mat-label">
+        Email address
+
         <input
           name="email"
           type="email"
           required
-          className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-3 text-sm font-normal outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20"
+          autoComplete="email"
+          className="mat-input mt-2"
           placeholder="you@example.com"
         />
       </label>
 
-      <label className="mt-5 block text-sm font-semibold text-gray-700">
+      <label className="mat-label">
         Password
+
         <div className="relative mt-2">
           <input
             name="password"
             type={showPassword ? "text" : "password"}
             required
-            className="w-full rounded-lg border border-gray-200 px-4 py-3 pr-12 text-sm font-normal outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20"
-            placeholder="••••••••"
+            autoComplete="current-password"
+            className="mat-input pr-12"
+            placeholder="Enter your password"
           />
 
           <button
@@ -135,7 +136,7 @@ export default function LoginForm() {
             aria-label={showPassword ? "Hide password" : "Show password"}
             aria-pressed={showPassword}
             title={showPassword ? "Hide password" : "Show password"}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:text-[#20ad68] focus:outline-none focus:ring-2 focus:ring-[#20ad68]/20"
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--mat-muted)] transition hover:bg-[var(--mat-green-50)] hover:text-[var(--mat-green-700)] focus-visible:outline-none"
           >
             {showPassword ? (
               <svg
@@ -172,26 +173,28 @@ export default function LoginForm() {
         </div>
       </label>
 
-      <div className="mt-4 flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm text-gray-600">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="flex items-center gap-2.5 text-sm text-[var(--mat-muted)]">
           <input
             name="rememberMe"
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-[#20ad68] focus:ring-[#20ad68]"
+            className="h-4 w-4 rounded border-[var(--mat-border-strong)] accent-[var(--mat-green-600)]"
           />
           Remember me
         </label>
+
         <Link
           href="/forgot-password"
-          className="text-sm font-semibold text-[#20ad68] hover:text-[#169357]"
+          className="text-sm font-bold text-[var(--mat-green-700)] transition hover:text-[var(--mat-green-800)]"
         >
           Forgot password?
         </Link>
       </div>
 
       <button
+        type="submit"
         disabled={isSubmitting}
-        className="mt-8 w-full rounded-lg bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:opacity-60"
+        className="mat-button mat-button-primary mt-2 w-full"
       >
         {isSubmitting ? "Logging in…" : "Log in"}
       </button>
