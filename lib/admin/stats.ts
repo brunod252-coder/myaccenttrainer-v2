@@ -250,3 +250,49 @@ export async function getLessonStats(): Promise<LessonStat[]> {
     .map(([slug, v]) => ({ slug, title: titles.get(slug) || slug, attempts: v.n, avg: Math.round(v.sum / v.n) }))
     .sort((a, b) => b.attempts - a.attempts);
 }
+
+export type AdminRecordingDirectoryRow = {
+  id: string;
+  userId: string;
+  lessonSlug: string | null;
+  focus: string | null;
+  overall: number | null;
+  mimeType: string;
+  createdAt: Date;
+  user: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+};
+
+export async function listAdminRecordings(
+  limit = 100,
+): Promise<AdminRecordingDirectoryRow[]> {
+  try {
+    return await prisma.voiceRecording.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        userId: true,
+        lessonSlug: true,
+        focus: true,
+        overall: true,
+        mimeType: true,
+        createdAt: true,
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  } catch {
+    return [];
+  }
+}
