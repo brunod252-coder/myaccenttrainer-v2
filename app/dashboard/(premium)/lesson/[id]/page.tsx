@@ -41,23 +41,39 @@ export default async function LessonPage({
   return (
     <AppLayout userName={userName} role={user.role}>
       <div className="space-y-6">
-        <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">
-            {lesson.course}
-          </p>
-          <h1 className="mt-2 font-display text-3xl text-[#17223b] md:text-4xl">
-            {lesson.title} — {lesson.subtitle}
-          </h1>
-          <p className="mt-4 max-w-3xl leading-7 text-gray-600">{lesson.description}</p>
-          <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
-            <span className="rounded-full bg-[#e9f8f3] px-3 py-1 text-[#168c56]">
-              {lesson.difficulty}
-            </span>
-            <span className="rounded-full bg-[#e9f1f6] px-3 py-1 text-[#52719f]">
-              about {lesson.estimatedMinutes} min
-            </span>
+        <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+          <div className="p-6 sm:p-8 lg:p-10">
+            <p className="mat-eyebrow">
+              {lesson.course}
+            </p>
+
+            <h1 className="mt-3 max-w-4xl font-display text-3xl leading-tight text-[var(--mat-ink)] md:text-4xl">
+              {lesson.title}
+            </h1>
+
+            <p className="mt-2 text-base font-semibold text-[var(--mat-blue)]">
+              {lesson.subtitle}
+            </p>
+
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+              {lesson.description}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                {lesson.difficulty}
+              </span>
+
+              <span className="mat-pill bg-[var(--mat-blue-soft)] text-[var(--mat-blue)]">
+                about {lesson.estimatedMinutes} min
+              </span>
+
+              <span className="mat-pill bg-[var(--mat-surface-soft)] text-[var(--mat-muted)]">
+                Listen · Practice · Feedback
+              </span>
+            </div>
           </div>
-        </div>
+        </section>
 
         <LessonPlayer
           lesson={lesson}

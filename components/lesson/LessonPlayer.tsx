@@ -44,8 +44,30 @@ export default function LessonPlayer({
   }
 
   return (
-    <div className="space-y-6">
-      <LessonStepper sections={lesson.sections} currentSectionId={currentSection?.id} />
+    <section className="space-y-6">
+      <div className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-5 shadow-[var(--mat-shadow-sm)] sm:p-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="mat-eyebrow">
+              Lesson journey
+            </p>
+
+            <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+              Follow each step in order
+            </h2>
+          </div>
+
+          <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+            Step {Math.min(currentIndex + 1, lesson.sections.length)} of{" "}
+            {lesson.sections.length}
+          </span>
+        </div>
+
+        <LessonStepper
+          sections={lesson.sections}
+          currentSectionId={currentSection?.id}
+        />
+      </div>
 
       <div className="space-y-4">
         {lesson.sections.map((section, index) => {
@@ -78,7 +100,7 @@ export default function LessonPlayer({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -92,22 +114,47 @@ function LessonSectionPreview({
   isLocked: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <div
+      className={
+        "rounded-[var(--mat-radius-lg)] border p-5 transition " +
+        (isCompleted
+          ? "border-[var(--mat-border-green)] bg-[var(--mat-green-50)]"
+          : "border-[var(--mat-border)] bg-[var(--mat-surface-soft)]")
+      }
+    >
       <div className="flex items-center gap-4">
-        <div
+        <span
           className={
-            "flex h-10 w-10 items-center justify-center rounded-full text-lg " +
-            (isCompleted ? "bg-[#20ad68] text-white" : "bg-[#e9f8f3] text-gray-400")
+            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold " +
+            (isCompleted
+              ? "bg-[var(--mat-green-700)] text-white"
+              : "bg-white text-[var(--mat-muted-light)]")
           }
         >
           {isCompleted ? "✓" : isLocked ? "🔒" : "•"}
-        </div>
+        </span>
 
-        <div>
-          <h3 className="font-semibold text-[#17223b]">{section.title}</h3>
-          <p className="mt-1 text-sm text-gray-500">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-[var(--mat-ink)]">
+              {section.title}
+            </h3>
+
+            <span
+              className={
+                "mat-pill " +
+                (isCompleted
+                  ? "bg-white text-[var(--mat-green-800)]"
+                  : "bg-white text-[var(--mat-muted)]")
+              }
+            >
+              {isCompleted ? "Completed" : isLocked ? "Locked" : "Up next"}
+            </span>
+          </div>
+
+          <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
             {isCompleted
-              ? "Completed"
+              ? "You completed this step."
               : isLocked
                 ? "Complete the previous step to unlock."
                 : section.description}

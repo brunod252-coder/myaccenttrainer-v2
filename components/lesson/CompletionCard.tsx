@@ -14,24 +14,52 @@ export default function CompletionCard({
   nextHref = "/dashboard/courses",
 }: CompletionCardProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-[#cdeee1] bg-gradient-to-br from-[#f0faf6] to-white p-8 shadow-sm">
-      <div className="flex items-start gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#20ad68] text-2xl text-white">
-          🎉
-        </div>
+    <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-white shadow-[var(--mat-shadow-sm)]">
+      <div className="bg-[var(--mat-green-50)] p-6 sm:p-8">
+        <div className="flex items-start gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--mat-green-700)] text-white">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.25"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m5 12 4 4L19 6" />
+            </svg>
+          </span>
 
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-[#20ad68]">Lesson complete</p>
-          <h2 className="mt-2 font-display text-2xl text-[#17223b]">{title}</h2>
-          <p className="mt-4 leading-7 text-gray-600">{message}</p>
+          <div className="min-w-0 flex-1">
+            <p className="mat-eyebrow">
+              Lesson complete
+            </p>
 
-          <Link
-            href={nextHref}
-            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357]"
-          >
-            {nextLessonLabel}
-          </Link>
+            <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+              {title}
+            </h2>
+
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+              {message}
+            </p>
+          </div>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--mat-border-green)] p-6 sm:px-8">
+        <p className="text-sm leading-6 text-[var(--mat-muted)]">
+          You&apos;ve reached the end of this lesson.
+        </p>
+
+        <Link
+          href={nextHref}
+          className="mat-button mat-button-primary"
+        >
+          {nextLessonLabel}
+          <span aria-hidden="true">→</span>
+        </Link>
       </div>
     </section>
   );

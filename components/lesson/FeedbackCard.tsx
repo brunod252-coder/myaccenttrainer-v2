@@ -1,4 +1,8 @@
-import type { PhonemeScore, Difficulty, AttemptComparison } from "@/lib/pronunciation/types";
+import type {
+  AttemptComparison,
+  Difficulty,
+  PhonemeScore,
+} from "@/lib/pronunciation/types";
 
 type FeedbackCardProps = {
   score?: number | null;
@@ -21,10 +25,22 @@ function barColor(score: number): string {
   return "#d1495b";
 }
 
-const DIFFICULTY_META: Record<Difficulty, { label: string; cls: string }> = {
-  easy: { label: "Easier sound", cls: "bg-[#e5f3ec] text-[#2e7d5b]" },
-  moderate: { label: "Moderate sound", cls: "bg-[#eef4f9] text-[#52719f]" },
-  hard: { label: "Tricky sound", cls: "bg-[#fbefd9] text-[#8a5a17]" },
+const DIFFICULTY_META: Record<
+  Difficulty,
+  { label: string; cls: string }
+> = {
+  easy: {
+    label: "Easier sound",
+    cls: "bg-[var(--mat-green-50)] text-[var(--mat-green-800)]",
+  },
+  moderate: {
+    label: "Moderate sound",
+    cls: "bg-[var(--mat-blue-soft)] text-[var(--mat-blue)]",
+  },
+  hard: {
+    label: "Tricky sound",
+    cls: "bg-amber-50 text-amber-800",
+  },
 };
 
 export default function FeedbackCard({
@@ -44,134 +60,270 @@ export default function FeedbackCard({
   const hasScore = typeof score === "number";
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-      <div className="flex items-start gap-5">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f3] text-2xl">
-          🤖
-        </div>
+    <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+      <div className="p-6 sm:p-8">
+        <div className="flex items-start gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 19v-7a8 8 0 0 1 16 0v7" />
+              <path d="M8 19h8" />
+              <path d="M9 8h.01" />
+              <path d="M15 8h.01" />
+              <path d="M9 12c1.8 1.4 4.2 1.4 6 0" />
+            </svg>
+          </span>
 
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-sm font-semibold text-[#20ad68]">Nina&apos;s feedback</p>
-            {difficulty && (
-              <span className={"rounded-full px-2.5 py-0.5 text-xs font-semibold " + DIFFICULTY_META[difficulty].cls}>
-                {DIFFICULTY_META[difficulty].label}
-              </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="mat-eyebrow">
+                Nina&apos;s feedback
+              </p>
+
+              {difficulty && (
+                <span className={"mat-pill " + DIFFICULTY_META[difficulty].cls}>
+                  {DIFFICULTY_META[difficulty].label}
+                </span>
+              )}
+            </div>
+
+            <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+              {title}
+            </h2>
+
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+              {message}
+            </p>
+
+            {comparison && (
+              <div
+                className={
+                  "mt-4 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold " +
+                  (comparison.direction === "up"
+                    ? "bg-[var(--mat-green-50)] text-[var(--mat-green-800)]"
+                    : comparison.direction === "down"
+                      ? "bg-red-50 text-[var(--mat-red)]"
+                      : "bg-[var(--mat-blue-soft)] text-[var(--mat-blue)]")
+                }
+              >
+                <span aria-hidden="true">
+                  {comparison.direction === "up"
+                    ? "▲"
+                    : comparison.direction === "down"
+                      ? "▼"
+                      : "—"}
+                </span>
+
+                <span>
+                  {comparison.delta > 0 ? "+" : ""}
+                  {comparison.delta} vs. your last try on this sound (
+                  {comparison.previous})
+                </span>
+              </div>
             )}
           </div>
-          <h2 className="mt-2 font-display text-2xl text-[#17223b]">{title}</h2>
-
-          {comparison && (
-            <div
-              className={
-                "mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold " +
-                (comparison.direction === "up"
-                  ? "bg-[#e5f3ec] text-[#2e7d5b]"
-                  : comparison.direction === "down"
-                    ? "bg-[#fdecec] text-[#c0473f]"
-                    : "bg-[#eef4f9] text-[#52719f]")
-              }
-            >
-              <span>{comparison.direction === "up" ? "▲" : comparison.direction === "down" ? "▼" : "—"}</span>
-              {comparison.delta > 0 ? "+" : ""}
-              {comparison.delta} vs. your last try on this sound ({comparison.previous})
-            </div>
-          )}
-
-          <p className="mt-4 leading-7 text-gray-600">{message}</p>
-
-          {hasScore && (
-            <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-xl border border-gray-100 bg-[#f8fbfa] p-5">
-                <p className="text-sm text-gray-500">Pronunciation</p>
-                <p className="mt-2 font-display text-4xl text-[#20ad68]">{score}%</p>
-              </div>
-              {typeof rhythm === "number" && (
-                <div className="rounded-xl border border-gray-100 bg-[#f8fbfa] p-5">
-                  <p className="text-sm text-gray-500">Rhythm &amp; stress</p>
-                  <p className="mt-2 font-display text-4xl text-[#52719f]">{rhythm}%</p>
-                </div>
-              )}
-              {typeof confidence === "number" && (
-                <div className="rounded-xl border border-gray-100 bg-[#f8fbfa] p-5">
-                  <p className="text-sm text-gray-500">Nina&apos;s confidence</p>
-                  <p className="mt-2 font-display text-4xl text-[#17223b]">{confidence}%</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {((strengths && strengths.length > 0) || (improvements && improvements.length > 0)) && (
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              {strengths && strengths.length > 0 && (
-                <div className="rounded-xl border border-[#d7f2e7] bg-[#f6fdfa] p-5">
-                  <p className="text-sm font-semibold text-[#168c56]">What worked</p>
-                  <ul className="mt-2 space-y-1.5">
-                    {strengths.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-gray-700">
-                        <span className="text-[#20ad68]">✓</span> {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {improvements && improvements.length > 0 && (
-                <div className="rounded-xl border border-gray-100 bg-[#f8fbfa] p-5">
-                  <p className="text-sm font-semibold text-[#8a5a17]">To work on</p>
-                  <ul className="mt-2 space-y-1.5">
-                    {improvements.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-sm text-gray-700">
-                        <span className="text-[#c98a2b]">→</span> {s}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          {phonemes && phonemes.length > 0 && (
-            <div className="mt-8">
-              <p className="text-sm font-semibold text-[#52719f]">Sound by sound</p>
-              <div className="mt-4 space-y-3">
-                {phonemes.map((p) => (
-                  <div key={p.symbol + p.word} className="flex items-center gap-3">
-                    <div className="flex h-9 w-11 items-center justify-center rounded-lg bg-[#e9f8f3] text-sm font-semibold text-[#20ad68]">
-                      {p.symbol}
-                    </div>
-                    <div className="w-24 text-sm text-gray-500">{p.word}</div>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${p.score}%`, backgroundColor: barColor(p.score) }}
-                      />
-                    </div>
-                    <div
-                      className="w-9 text-right text-sm font-semibold"
-                      style={{ color: barColor(p.score) }}
-                    >
-                      {p.score}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {tip && (
-            <div className="mt-8 rounded-xl border border-[#cdeee1] bg-[#f0faf6] p-5">
-              <p className="text-sm font-semibold text-[#20ad68]">Try this next</p>
-              <p className="mt-2 text-sm leading-6 text-gray-700">{tip.text}</p>
-            </div>
-          )}
-
-          {source === "practice-estimate" && (
-            <p className="mt-4 text-xs text-gray-400">
-              Practice estimate — connect Azure Speech for exact per-sound scoring.
-            </p>
-          )}
         </div>
+
+        {hasScore && (
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <ScoreMetric
+              label="Pronunciation"
+              value={score}
+              emphasis="green"
+            />
+
+            {typeof rhythm === "number" && (
+              <ScoreMetric
+                label="Rhythm & stress"
+                value={rhythm}
+                emphasis="blue"
+              />
+            )}
+
+            {typeof confidence === "number" && (
+              <ScoreMetric
+                label="Nina's confidence"
+                value={confidence}
+                emphasis="ink"
+              />
+            )}
+          </div>
+        )}
+
+        {((strengths && strengths.length > 0) ||
+          (improvements && improvements.length > 0)) && (
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {strengths && strengths.length > 0 && (
+              <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5">
+                <p className="text-sm font-bold text-[var(--mat-green-800)]">
+                  What worked
+                </p>
+
+                <ul className="mt-3 space-y-2">
+                  {strengths.map((strength, index) => (
+                    <li
+                      key={index}
+                      className="flex gap-2 text-sm leading-6 text-[var(--mat-ink)]"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="font-bold text-[var(--mat-green-700)]"
+                      >
+                        ✓
+                      </span>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {improvements && improvements.length > 0 && (
+              <div className="rounded-[var(--mat-radius-lg)] border border-amber-200 bg-amber-50 p-5">
+                <p className="text-sm font-bold text-amber-900">
+                  To work on
+                </p>
+
+                <ul className="mt-3 space-y-2">
+                  {improvements.map((improvement, index) => (
+                    <li
+                      key={index}
+                      className="flex gap-2 text-sm leading-6 text-amber-950"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="font-bold text-amber-700"
+                      >
+                        →
+                      </span>
+                      <span>{improvement}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
+        {phonemes && phonemes.length > 0 && (
+          <div className="mt-7 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-5 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p className="text-sm font-bold text-[var(--mat-ink)]">
+                  Sound by sound
+                </p>
+                <p className="mt-1 text-xs leading-5 text-[var(--mat-muted)]">
+                  See which sounds were clear and which ones need another try.
+                </p>
+              </div>
+
+              <span className="mat-pill bg-white text-[var(--mat-muted)]">
+                {phonemes.length} sounds
+              </span>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              {phonemes.map((phoneme) => (
+                <div
+                  key={phoneme.symbol + phoneme.word}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-9 min-w-11 items-center justify-center rounded-lg bg-white px-2 text-sm font-bold text-[var(--mat-green-700)]">
+                      {phoneme.symbol}
+                    </span>
+
+                    <span className="truncate text-sm text-[var(--mat-muted)]">
+                      {phoneme.word}
+                    </span>
+                  </div>
+
+                  <div className="h-2 overflow-hidden rounded-full bg-white">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${phoneme.score}%`,
+                        backgroundColor: barColor(phoneme.score),
+                      }}
+                    />
+                  </div>
+
+                  <span
+                    className="w-9 text-right text-sm font-bold"
+                    style={{ color: barColor(phoneme.score) }}
+                  >
+                    {phoneme.score}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tip && (
+          <div className="mt-6 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-bold text-[var(--mat-green-800)]">
+                Try this next
+              </p>
+
+              {tip.sound && (
+                <span className="mat-pill bg-white text-[var(--mat-green-800)]">
+                  {tip.sound}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-2 text-sm leading-7 text-[var(--mat-ink)]">
+              {tip.text}
+            </p>
+          </div>
+        )}
+
+        {source === "practice-estimate" && (
+          <p className="mt-5 text-xs leading-5 text-[var(--mat-muted-light)]">
+            Practice estimate — connect Azure Speech for exact per-sound
+            scoring.
+          </p>
+        )}
       </div>
     </section>
+  );
+}
+
+function ScoreMetric({
+  label,
+  value,
+  emphasis,
+}: {
+  label: string;
+  value: number;
+  emphasis: "green" | "blue" | "ink";
+}) {
+  const valueClass =
+    emphasis === "green"
+      ? "text-[var(--mat-green-700)]"
+      : emphasis === "blue"
+        ? "text-[var(--mat-blue)]"
+        : "text-[var(--mat-ink)]";
+
+  return (
+    <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-5">
+      <p className="text-sm text-[var(--mat-muted)]">
+        {label}
+      </p>
+
+      <p className={"mt-2 font-display text-4xl " + valueClass}>
+        {value}%
+      </p>
+    </div>
   );
 }
