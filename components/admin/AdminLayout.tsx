@@ -89,11 +89,12 @@ function NavigationLink({
     return (
       <Link
         href={item.href}
+        aria-current={active ? "page" : undefined}
         className={[
-          "inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition",
+          "inline-flex shrink-0 items-center gap-2 rounded-[var(--mat-radius-lg)] border px-3 py-2 text-sm font-semibold transition",
           active
-            ? "bg-[#111c30] text-white shadow-sm"
-            : "bg-white text-[#526070] hover:bg-[#eef7f3] hover:text-[#168c56]",
+            ? "border-[var(--mat-green-700)] bg-[var(--mat-green-700)] text-white shadow-[var(--mat-shadow-sm)]"
+            : "border-[var(--mat-border)] bg-white text-[var(--mat-muted)] hover:border-[var(--mat-border-green)] hover:bg-[var(--mat-green-50)] hover:text-[var(--mat-green-700)]",
         ].join(" ")}
       >
         <Icon className="h-4 w-4" />
@@ -105,25 +106,31 @@ function NavigationLink({
   return (
     <Link
       href={item.href}
+      aria-current={active ? "page" : undefined}
       className={[
-        "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+        "group flex items-center gap-3 rounded-[var(--mat-radius-lg)] px-3 py-2.5 text-sm font-medium transition",
         active
-          ? "bg-[#20ad68] text-white shadow-sm"
-          : "text-white/65 hover:bg-white/5 hover:text-white",
+          ? "bg-[var(--mat-green-700)] text-white shadow-[var(--mat-shadow-sm)]"
+          : "text-white/65 hover:bg-white/10 hover:text-white",
       ].join(" ")}
     >
       <Icon
         className={[
           "h-[18px] w-[18px] shrink-0",
-          active ? "text-white" : "text-white/45 group-hover:text-white",
+          active
+            ? "text-white"
+            : "text-white/45 group-hover:text-white",
         ].join(" ")}
       />
 
       <span>{item.label}</span>
 
-      {active && (
-        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />
-      )}
+      {active ? (
+        <span
+          aria-hidden="true"
+          className="ml-auto h-1.5 w-1.5 rounded-full bg-white"
+        />
+      ) : null}
     </Link>
   );
 }
@@ -138,23 +145,44 @@ export default function AdminLayout({
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-[#f6faf8] md:grid md:grid-cols-[260px_1fr]">
-      <aside className="sticky top-0 hidden h-screen flex-col overflow-y-auto bg-[#111c30] px-4 py-6 md:flex">
+    <div className="min-h-screen bg-[var(--mat-surface-soft)] md:grid md:grid-cols-[272px_1fr]">
+      <aside className="sticky top-0 hidden h-screen flex-col overflow-y-auto bg-[var(--mat-ink)] px-4 py-6 md:flex">
         <Link href="/admin" className="px-2">
-          <div className="text-lg font-bold">
-            <span className="text-[#3ecb8a]">my</span>
-            <span className="mx-1 rounded-md bg-[#20ad68] px-1.5 text-white">
-              ACCENT
-            </span>
-            <span className="text-white/80">admin</span>
-          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-[var(--mat-radius-lg)] bg-[var(--mat-green-700)] text-sm font-black text-white">
+              MAT
+            </div>
 
-          <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.2em] text-white/35">
-            Control room
-          </span>
+            <div>
+              <p className="font-display text-base font-semibold text-white">
+                My Accent Trainer
+              </p>
+
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
+                Administration
+              </p>
+            </div>
+          </div>
         </Link>
 
-        <nav className="mt-8 flex flex-col gap-6">
+        <div className="mx-2 mt-6 rounded-[var(--mat-radius-lg)] border border-white/10 bg-white/[0.04] px-4 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/35">
+            Workspace
+          </p>
+
+          <p className="mt-1 text-sm font-semibold text-white">
+            Platform operations
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-white/45">
+            Learning, publishing, users, growth, and system administration.
+          </p>
+        </div>
+
+        <nav
+          aria-label="Administration"
+          className="mt-7 flex flex-col gap-6"
+        >
           {navigation.map((section) => (
             <div key={section.label}>
               <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
@@ -177,7 +205,7 @@ export default function AdminLayout({
         <div className="mt-auto border-t border-white/10 pt-4">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-white/50 transition hover:bg-white/5 hover:text-white"
+            className="flex items-center gap-2 rounded-[var(--mat-radius-lg)] px-3 py-2.5 text-sm font-medium text-white/55 transition hover:bg-white/10 hover:text-white"
           >
             <Arrow className="h-4 w-4 rotate-180" />
             Back to learner app
@@ -186,29 +214,37 @@ export default function AdminLayout({
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur">
-          <div className="flex h-16 items-center justify-between px-4 sm:px-6">
-            <div>
-              <span className="rounded-full bg-[#111c30] px-3 py-1 text-xs font-semibold text-white md:hidden">
-                Admin
-              </span>
+        <header className="sticky top-0 z-30 border-b border-[var(--mat-border)] bg-white/95 backdrop-blur">
+          <div className="flex min-h-16 items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--mat-green-700)] md:hidden">
+                Administration
+              </p>
 
-              <span className="hidden text-sm font-semibold text-[#17223b] md:inline">
-                My Accent Trainer Administration
-              </span>
+              <p className="truncate text-sm font-semibold text-[var(--mat-ink)]">
+                My Accent Trainer
+                <span className="hidden font-normal text-[var(--mat-muted)] sm:inline">
+                  {" "}
+                  / Administration
+                </span>
+              </p>
             </div>
 
-            <div className="text-right">
-              <p className="text-sm font-semibold text-[#17223b]">
+            <div className="min-w-0 text-right">
+              <p className="truncate text-sm font-semibold text-[var(--mat-ink)]">
                 {admin.name}
               </p>
-              <p className="text-[11px] uppercase tracking-wide text-gray-400">
+
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--mat-muted-light)]">
                 Administrator
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto border-t border-gray-100 px-4 py-2 md:hidden">
+          <nav
+            aria-label="Mobile administration"
+            className="overflow-x-auto border-t border-[var(--mat-border)] px-4 py-2 md:hidden"
+          >
             <div className="flex min-w-max gap-2">
               {navigation.flatMap((section) =>
                 section.items.map((item) => (
@@ -221,10 +257,10 @@ export default function AdminLayout({
                 )),
               )}
             </div>
-          </div>
+          </nav>
         </header>
 
-        <main className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <main className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {children}
         </main>
       </div>
