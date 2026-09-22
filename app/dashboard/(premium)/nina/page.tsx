@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import AppLayout from "@/components/layouts/AppLayout";
-import { Sparkle, CheckCircle, Chart, Mic } from "@/components/ui/icons";
+import { Sparkle, CheckCircle, Mic } from "@/components/ui/icons";
 import { verifyAuthToken } from "@/lib/jwt";
 import { prisma } from "@/lib/prisma";
 import { getNinaBrain } from "@/lib/nina/brain";
@@ -55,192 +55,601 @@ export default async function NinaPage() {
 
   return (
     <AppLayout userName={userName} role={user.role}>
-      <div className="mb-8 flex items-start gap-4">
-        <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#e9f8f3] text-2xl">🤖</div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#20ad68]">Nina&apos;s memory</p>
-          <h1 className="mt-1 font-display text-3xl text-[#17223b]">What Nina knows about your voice</h1>
-          <p className="mt-1 text-sm text-gray-500">Everything she remembers from your practice — and what she suggests next.</p>
-        </div>
-      </div>
+      <header className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="mat-eyebrow">
+                Nina&apos;s memory
+              </p>
 
-      {!brain.hasData ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center shadow-sm">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#e9f8f3] text-3xl">🎙️</div>
-          <h2 className="mt-4 font-display text-xl text-[#17223b]">Nina hasn&apos;t heard you yet</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500">{brain.longTerm}</p>
-          <Link href="/dashboard/practice" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#20ad68] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#169357]">
-            <Mic className="h-4 w-4" /> Start practicing
+              <h1 className="mt-2 font-display text-3xl text-[var(--mat-ink)] md:text-4xl">
+                What Nina has learned from your voice
+              </h1>
+
+              <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
+                Nina uses your scored speaking attempts to track patterns in
+                your clarity, sounds, consistency, and progress over time.
+              </p>
+            </div>
+
+            {brain.hasData && (
+              <Link
+                href="/dashboard/coaching"
+                className="mat-button mat-button-secondary"
+              >
+                Open my coaching plan
+              </Link>
+            )}
+          </div>
+        </header>
+
+        {!brain.hasData ? (
+        <div className="mat-empty-state mt-6">
+          <p className="mat-eyebrow">
+            Your speaking history starts here
+          </p>
+
+          <h2 className="mt-2 font-display text-2xl text-[var(--mat-ink)]">
+            Nina hasn&apos;t heard you yet
+          </h2>
+
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--mat-muted)]">
+            Record your first scored practice attempt and Nina can begin
+            identifying your clarity, sound patterns, progress, and useful
+            areas to practice next.
+          </p>
+
+          <Link
+            href="/dashboard/practice"
+            className="mat-button mat-button-primary mt-6"
+          >
+            <Mic className="h-4 w-4" />
+            Start practicing
           </Link>
         </div>
       ) : (
         <div className="space-y-5">
           {/* Nina's read — narrative + headline stats */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0f2a20] to-[#17223b] p-7 text-white shadow-md">
-            <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/5" />
-            <div className="relative flex items-center gap-2 text-sm font-semibold text-[#7fe3ac]">
-              <Sparkle className="h-4 w-4" /> Nina&apos;s read on you
-            </div>
-            <p className="relative mt-3 max-w-2xl font-display text-lg leading-relaxed text-white/90">
-              {firstName}, {brain.longTerm}
-            </p>
-            <div className="relative mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <Stat value={brain.clarity !== null ? String(brain.clarity) : "—"} label="Clarity now" />
-              <Stat value={brain.personalBest ? String(brain.personalBest.overall) : "—"} label="Personal best" />
-              <Stat value={`${brain.totalAttempts}`} label="Recordings" />
-              <Stat value={`${brain.streakDays}d`} label="Streak" />
-            </div>
-          </div>
+          <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-6 sm:p-7">
+              <div className="flex items-center gap-2 text-sm font-bold text-[var(--mat-green-800)]">
+                <Sparkle className="h-4 w-4" />
+                Nina&apos;s read on your practice
+              </div>
 
-          {/* Comparison + plan */}
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h2 className="font-display text-lg text-[#17223b]">Your last attempt</h2>
-              {brain.latest && (
-                <div className="mt-4">
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-display text-4xl text-[#17223b]">{brain.latest.overall}</span>
-                    <span className="text-sm text-gray-500">on {brain.latest.label}</span>
+              <p className="mt-4 max-w-4xl text-base leading-7 text-[var(--mat-ink)]">
+                {firstName}, {brain.longTerm}
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Stat
+                  value={brain.clarity !== null ? String(brain.clarity) : "—"}
+                  label="Clarity now"
+                />
+
+                <Stat
+                  value={brain.personalBest ? String(brain.personalBest.overall) : "—"}
+                  label="Personal best"
+                />
+
+                <Stat
+                  value={`${brain.totalAttempts}`}
+                  label="Scored recordings"
+                />
+
+                <Stat
+                  value={`${brain.streakDays}d`}
+                  label="Current streak"
+                />
+              </div>
+            </section>
+
+            {/* Latest evidence + next practice */}
+            <div className="grid gap-5 lg:grid-cols-2">
+              <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)]">
+                <p className="mat-eyebrow">
+                  Latest evidence
+                </p>
+
+                <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                  Your last scored attempt
+                </h2>
+
+                {brain.latest ? (
+                  <div className="mt-5">
+                    <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+                      <span className="font-display text-4xl text-[var(--mat-ink)]">
+                        {brain.latest.overall}
+                      </span>
+
+                      <span className="pb-1 text-sm text-[var(--mat-muted)]">
+                        on {brain.latest.label}
+                      </span>
+                    </div>
+
+                    {brain.comparison ? (
+                      <div
+                        className={
+                          "mt-4 rounded-[var(--mat-radius-lg)] border p-4 " +
+                          (brain.comparison.direction === "up"
+                            ? "border-[var(--mat-border-green)] bg-[var(--mat-green-50)]"
+                            : brain.comparison.direction === "down"
+                              ? "border-amber-200 bg-amber-50"
+                              : "border-[var(--mat-border)] bg-[var(--mat-surface-soft)]")
+                        }
+                      >
+                        <p
+                          className={
+                            "text-sm font-bold " +
+                            (brain.comparison.direction === "up"
+                              ? "text-[var(--mat-green-800)]"
+                              : brain.comparison.direction === "down"
+                                ? "text-amber-800"
+                                : "text-[var(--mat-blue)]")
+                          }
+                        >
+                          {brain.comparison.direction === "up"
+                            ? "Improved"
+                            : brain.comparison.direction === "down"
+                              ? "Lower than last time"
+                              : "Holding steady"}
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                          {brain.comparison.delta > 0 ? "+" : ""}
+                          {brain.comparison.delta} points compared with your
+                          previous {brain.latest.label} attempt, which scored{" "}
+                          {brain.comparison.previous}.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="mt-4 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4">
+                        <p className="text-sm font-semibold text-[var(--mat-ink)]">
+                          First scored attempt on this sound
+                        </p>
+
+                        <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                          Nina can compare it after you record this sound again.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {brain.comparison ? (
-                    <p className={"mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold " +
-                      (brain.comparison.direction === "up" ? "bg-[#e5f3ec] text-[#2e7d5b]"
-                        : brain.comparison.direction === "down" ? "bg-[#fdecec] text-[#c0473f]"
-                        : "bg-[#eef4f9] text-[#52719f]")}>
-                      {brain.comparison.direction === "up" ? "▲" : brain.comparison.direction === "down" ? "▼" : "—"}
-                      {brain.comparison.delta > 0 ? "+" : ""}{brain.comparison.delta} vs. your previous {brain.latest.label} attempt ({brain.comparison.previous})
+                ) : (
+                  <p className="mt-5 text-sm leading-6 text-[var(--mat-muted)]">
+                    Your latest scored attempt will appear here after you
+                    practice.
+                  </p>
+                )}
+              </section>
+
+              {brain.plan ? (
+                <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-6 shadow-[var(--mat-shadow-sm)]">
+                  <div className="flex items-center gap-2 text-sm font-bold text-[var(--mat-green-800)]">
+                    <Sparkle className="h-4 w-4" />
+                    Nina&apos;s next practice focus
+                  </div>
+
+                  <h2 className="mt-3 font-display text-2xl text-[var(--mat-ink)]">
+                    Focus on {brain.plan.label}
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)]">
+                    {brain.plan.reason}
+                  </p>
+
+                  <div className="mt-5 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--mat-muted-light)]">
+                      Practice phrase
                     </p>
-                  ) : (
-                    <p className="mt-3 text-sm text-gray-500">First time on this sound — Nina will compare your next one.</p>
-                  )}
-                </div>
+
+                    <p className="mt-2 font-display text-lg leading-7 text-[var(--mat-blue)]">
+                      “{brain.plan.phrase}”
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/dashboard/practice"
+                    className="mat-button mat-button-primary mt-5"
+                  >
+                    <Mic className="h-4 w-4" />
+                    Practice this now
+                  </Link>
+                </section>
+              ) : (
+                <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)]">
+                  <p className="mat-eyebrow">
+                    Next practice
+                  </p>
+
+                  <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    Nina is still learning your patterns
+                  </h2>
+
+                  <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)]">
+                    Keep practicing and Nina will use your scored attempts to
+                    identify a useful sound to focus on next.
+                  </p>
+
+                  <Link
+                    href="/dashboard/practice"
+                    className="mat-button mat-button-secondary mt-5"
+                  >
+                    <Mic className="h-4 w-4" />
+                    Keep practicing
+                  </Link>
+                </section>
               )}
             </div>
 
-            {brain.plan && (
-              <div className="rounded-2xl border border-[#d7f2e7] bg-[#f6fdfa] p-6 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#168c56]">
-                  <Sparkle className="h-4 w-4" /> Nina&apos;s plan for tomorrow
+            {/* Sound intelligence */}
+            <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="mat-eyebrow">
+                    Sound intelligence
+                  </p>
+
+                  <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    Sound by sound
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
+                    Nina groups your scored attempts by practice sound to show
+                    current averages and recent direction.
+                  </p>
                 </div>
-                <h2 className="mt-2 font-display text-lg text-[#17223b]">Focus on {brain.plan.label}</h2>
-                <p className="mt-2 text-sm text-gray-600">{brain.plan.reason}</p>
-                <div className="mt-4 rounded-xl border border-gray-100 bg-white p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Warm-up phrase</p>
-                  <p className="mt-1 font-display text-[#52719f]">“{brain.plan.phrase}”</p>
-                </div>
-                <Link href="/dashboard/practice" className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#20ad68] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#169357]">
-                  <Mic className="h-4 w-4" /> Practice this now
-                </Link>
+
+                <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                  {brain.sounds.length} {brain.sounds.length === 1 ? "sound" : "sounds"} tracked
+                </span>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {brain.sounds.map((s) => {
+                  const pill = statusPill(s.status);
+
+                  return (
+                    <div
+                      key={s.focus}
+                      className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4"
+                    >
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+                        <div className="min-w-32 flex-1">
+                          <p className="text-sm font-bold text-[var(--mat-ink)]">
+                            {s.label}
+                          </p>
+
+                          <p className="mt-1 text-xs text-[var(--mat-muted)]">
+                            {s.attempts} {s.attempts === 1 ? "scored attempt" : "scored attempts"}
+                          </p>
+                        </div>
+
+                        <div className="flex min-w-[220px] flex-[2] items-center gap-3">
+                          <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${s.avg}%`,
+                                backgroundColor: barColor(s.avg),
+                              }}
+                            />
+                          </div>
+
+                          <span
+                            className="w-9 text-right text-sm font-bold"
+                            style={{ color: barColor(s.avg) }}
+                          >
+                            {s.avg}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={
+                              "text-xs font-bold " +
+                              (s.delta > 0
+                                ? "text-[var(--mat-green-700)]"
+                                : s.delta < 0
+                                  ? "text-amber-700"
+                                  : "text-[var(--mat-muted)]")
+                            }
+                          >
+                            {s.delta > 0 ? `+${s.delta}` : s.delta}
+                          </span>
+
+                          <span
+                            className={
+                              "rounded-full px-2.5 py-1 text-[11px] font-semibold " +
+                              pill.cls
+                            }
+                          >
+                            {pill.text}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <InsightCard
+                title="Strongest sound"
+                emoji="🌟"
+                value={brain.strongest?.label ?? "—"}
+                detail={
+                  brain.strongest
+                    ? `${brain.strongest.avg} average — ${
+                        brain.mastered.some(
+                          (sound) => sound.focus === brain.strongest?.focus,
+                        )
+                          ? "mastered"
+                          : "your highest current average"
+                      }`
+                    : "More scored practice will establish this."
+                }
+              />
+
+              <InsightCard
+                title="Needs most attention"
+                emoji="🎯"
+                value={brain.weakest?.label ?? "—"}
+                detail={
+                  brain.weakest
+                    ? `${brain.weakest.avg} average across ${brain.weakest.attempts} ${
+                        brain.weakest.attempts === 1 ? "attempt" : "attempts"
+                      }`
+                    : "More scored practice will establish this."
+                }
+              />
+
+              <InsightCard
+                title="Most practiced"
+                emoji="🔁"
+                value={brain.mostPracticed?.label ?? "—"}
+                detail={
+                  brain.mostPracticed
+                    ? `${brain.mostPracticed.attempts} scored ${
+                        brain.mostPracticed.attempts === 1
+                          ? "attempt"
+                          : "attempts"
+                      } so far`
+                    : "Your practice history will establish this."
+                }
+              />
+            </div>
+
+            {(brain.improving.length > 0 || brain.regressing.length > 0) && (
+              <div className="grid gap-5 lg:grid-cols-2">
+                <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-6">
+                  <p className="mat-eyebrow">
+                    Recent direction
+                  </p>
+
+                  <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+                    Getting stronger
+                  </h2>
+
+                  {brain.improving.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {brain.improving.map((s) => (
+                        <div
+                          key={s.focus}
+                          className="flex items-center justify-between gap-4 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-white p-4"
+                        >
+                          <span className="text-sm font-semibold text-[var(--mat-ink)]">
+                            {s.label}
+                          </span>
+
+                          <span className="text-sm font-bold text-[var(--mat-green-700)]">
+                            +{s.delta} points
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm leading-6 text-[var(--mat-muted)]">
+                      Nina will show improving sounds here when recent scored
+                      attempts move above their earlier average.
+                    </p>
+                  )}
+                </section>
+
+                <section className="rounded-[var(--mat-radius-xl)] border border-amber-200 bg-amber-50 p-6">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">
+                    Worth revisiting
+                  </p>
+
+                  <h2 className="mt-1 font-display text-xl text-[var(--mat-ink)]">
+                    Sounds trending lower
+                  </h2>
+
+                  {brain.regressing.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {brain.regressing.map((s) => (
+                        <div
+                          key={s.focus}
+                          className="flex items-center justify-between gap-4 rounded-[var(--mat-radius-lg)] border border-amber-200 bg-white p-4"
+                        >
+                          <span className="text-sm font-semibold text-[var(--mat-ink)]">
+                            {s.label}
+                          </span>
+
+                          <span className="text-sm font-bold text-amber-700">
+                            {s.delta} points
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-sm leading-6 text-[var(--mat-muted)]">
+                      None of your tracked sounds currently meet Nina&apos;s
+                      threshold for a meaningful downward trend.
+                    </p>
+                  )}
+                </section>
               </div>
             )}
-          </div>
 
-          {/* Sound-by-sound intelligence */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-2">
-              <Chart className="h-5 w-5 text-[#20ad68]" />
-              <h2 className="font-display text-lg text-[#17223b]">Sound by sound</h2>
-            </div>
-            <p className="mt-1 text-sm text-gray-500">How each sound is trending across everything you&apos;ve recorded.</p>
-            <div className="mt-5 space-y-3">
-              {brain.sounds.map((s) => {
-                const pill = statusPill(s.status);
-                return (
-                  <div key={s.focus} className="flex items-center gap-4">
-                    <div className="w-32 flex-shrink-0 text-sm font-medium text-[#17223b]">{s.label}</div>
-                    <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-                      <div className="h-full rounded-full" style={{ width: `${s.avg}%`, backgroundColor: barColor(s.avg) }} />
-                    </div>
-                    <div className="w-9 text-right text-sm font-semibold" style={{ color: barColor(s.avg) }}>{s.avg}</div>
-                    <div className="hidden w-24 text-right text-xs text-gray-400 sm:block">
-                      {s.delta > 0 ? `+${s.delta}` : s.delta} trend
-                    </div>
-                    <span className={"w-24 flex-shrink-0 rounded-full px-2.5 py-1 text-center text-[11px] font-semibold " + pill.cls}>{pill.text}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+            {/* Voice history */}
+            <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="mat-eyebrow">
+                    Voice history
+                  </p>
 
-          {/* Insight cards row */}
-          <div className="grid gap-5 sm:grid-cols-3">
-            <InsightCard title="Strongest sound" emoji="🌟" value={brain.strongest?.label ?? "—"}
-              detail={brain.strongest ? `${brain.strongest.avg} average — ${brain.mastered.length ? "mastered" : "your most reliable"}` : ""} />
-            <InsightCard title="Biggest opportunity" emoji="🎯" value={brain.weakest?.label ?? "—"}
-              detail={brain.weakest ? `${brain.weakest.avg} average — the fastest way to lift clarity` : ""} />
-            <InsightCard title="Most practiced" emoji="🔁" value={brain.mostPracticed?.label ?? "—"}
-              detail={brain.mostPracticed ? `${brain.mostPracticed.attempts} recordings so far` : ""} />
-          </div>
+                  <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    Your recent recordings
+                  </h2>
 
-          {/* Improvement & regression */}
-          {(brain.improving.length > 0 || brain.regressing.length > 0) && (
-            <div className="grid gap-5 lg:grid-cols-2">
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]"><span>📈</span> Getting better</h2>
-                {brain.improving.length ? (
-                  <ul className="mt-3 space-y-2">
-                    {brain.improving.map((s) => (
-                      <li key={s.focus} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700">{s.label}</span>
-                        <span className="font-semibold text-[#2e7d5b]">+{s.delta} points</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="mt-3 text-sm text-gray-500">Keep going — improvements will show here.</p>}
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
+                    Replay your available stored practice recordings alongside
+                    the sound, date, and scored clarity attached to each take.
+                  </p>
+                </div>
+
+                <span className="mat-pill bg-[var(--mat-surface-soft)] text-[var(--mat-muted)]">
+                  {recordings.length}{" "}
+                  {recordings.length === 1 ? "recording" : "recordings"}
+                </span>
               </div>
-              <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]"><span>👀</span> Worth revisiting</h2>
-                {brain.regressing.length ? (
-                  <ul className="mt-3 space-y-2">
-                    {brain.regressing.map((s) => (
-                      <li key={s.focus} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700">{s.label}</span>
-                        <span className="font-semibold text-[#c0473f]">{s.delta} points</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="mt-3 text-sm text-gray-500">Nothing slipping — nicely consistent.</p>}
-              </div>
-            </div>
-          )}
 
-          {/* Voice history — replay past takes */}
-          {recordings.length > 0 && (
-            <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-              <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]"><Mic className="h-5 w-5 text-[#20ad68]" /> Your recent recordings</h2>
-              <p className="mt-1 text-sm text-gray-500">Listen back to your last few takes and hear yourself improve.</p>
-              <div className="mt-4 space-y-3">
-                {recordings.map((r) => (
-                  <div key={r.id} className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-100 bg-[#f8fbfa] p-4">
-                    <div className="min-w-[140px]">
-                      <p className="text-sm font-semibold text-[#17223b]">{recLabel(r.focus)}</p>
-                      <p className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+              {recordings.length > 0 ? (
+                <div className="mt-6 space-y-3">
+                  {recordings.map((r) => (
+                    <div
+                      key={r.id}
+                      className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4 sm:p-5"
+                    >
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-sm font-bold text-[var(--mat-ink)]">
+                              {recLabel(r.focus)}
+                            </p>
+
+                            {typeof r.overall === "number" && (
+                              <span
+                                className="rounded-full bg-white px-2.5 py-1 text-xs font-bold"
+                                style={{ color: barColor(r.overall) }}
+                              >
+                                {r.overall}% clarity
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="mt-1 text-xs text-[var(--mat-muted-light)]">
+                            {new Date(r.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+
+                        <audio
+                          controls
+                          preload="none"
+                          src={`/api/recordings/${r.id}`}
+                          className="h-10 w-full lg:max-w-md"
+                        >
+                          Your browser does not support audio playback.
+                        </audio>
+                      </div>
                     </div>
-                    {typeof r.overall === "number" && (
-                      <span className="rounded-full bg-[#e9f8f3] px-2.5 py-1 text-xs font-semibold text-[#168c56]">{r.overall}% clarity</span>
-                    )}
-                        <audio controls preload="none" src={`/api/recordings/${r.id}`} className="h-9 flex-1 min-w-[220px]" />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-6 rounded-[var(--mat-radius-lg)] border border-dashed border-[var(--mat-border-strong)] bg-[var(--mat-surface-soft)] p-5">
+                  <p className="text-sm font-semibold text-[var(--mat-ink)]">
+                    No stored recordings yet
+                  </p>
+
+                  <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
+                    Available saved practice recordings will appear here when
+                    you have recordings that can be replayed.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {/* Milestones */}
+            <section className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="mat-eyebrow">
+                    Speaking milestones
+                  </p>
+
+                  <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                    Milestones from your practice
+                  </h2>
+
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
+                    Nina tracks these milestones against your scored speaking
+                    history and marks them as they are reached.
+                  </p>
+                </div>
+
+                <span className="mat-pill bg-[var(--mat-green-50)] text-[var(--mat-green-800)]">
+                  {brain.milestones.filter((m) => m.reached).length} of{" "}
+                  {brain.milestones.length} reached
+                </span>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {brain.milestones.map((m) => (
+                  <div
+                    key={m.key}
+                    className={
+                      "rounded-[var(--mat-radius-lg)] border p-4 " +
+                      (m.reached
+                        ? "border-[var(--mat-border-green)] bg-[var(--mat-green-50)]"
+                        : "border-[var(--mat-border)] bg-[var(--mat-surface-soft)]")
+                    }
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={
+                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full " +
+                          (m.reached
+                            ? "bg-white text-[var(--mat-green-700)] shadow-[var(--mat-shadow-sm)]"
+                            : "bg-white text-[var(--mat-muted-light)]")
+                        }
+                      >
+                        {m.reached ? (
+                          <CheckCircle className="h-5 w-5" />
+                        ) : (
+                          <span aria-hidden="true">🔒</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-bold text-[var(--mat-ink)]">
+                          {m.label}
+                        </p>
+
+                        <p className="mt-1 text-xs leading-5 text-[var(--mat-muted)]">
+                          {m.hint}
+                        </p>
+
+                        <p
+                          className={
+                            "mt-2 text-[11px] font-bold uppercase tracking-[0.12em] " +
+                            (m.reached
+                              ? "text-[var(--mat-green-700)]"
+                              : "text-[var(--mat-muted-light)]")
+                          }
+                        >
+                          {m.reached ? "Reached" : "In progress"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Milestones */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="flex items-center gap-2 font-display text-lg text-[#17223b]"><CheckCircle className="h-5 w-5 text-[#20ad68]" /> Milestones</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {brain.milestones.map((m) => (
-                <div key={m.key} className={"rounded-xl border border-gray-100 p-4 text-center " + (m.reached ? "" : "opacity-45")}>
-                  <div className={"mx-auto flex h-11 w-11 items-center justify-center rounded-full text-xl " + (m.reached ? "bg-[#e9f8f3]" : "bg-gray-100")}>
-                    {m.reached ? "🏅" : "🔒"}
-                  </div>
-                  <p className="mt-2 text-xs font-semibold text-[#17223b]">{m.label}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-400">{m.hint}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+            </section>
         </div>
       )}
     </AppLayout>
