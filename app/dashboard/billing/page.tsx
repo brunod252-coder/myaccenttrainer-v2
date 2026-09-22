@@ -144,35 +144,65 @@ export default async function BillingPage() {
       userName={userName}
       role={user.role}
     >
-      <div className="mx-auto max-w-5xl">
-        <Link
-          href="/dashboard/wallet"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#168c56] hover:text-[#127548]"
-        >
-          <Arrow className="h-4 w-4" />
-          Back to wallet
-        </Link>
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white shadow-[var(--mat-shadow-sm)]">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-6 sm:p-8">
+              <Link
+                href="/dashboard/wallet"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--mat-green-700)] hover:underline"
+              >
+                <Arrow className="h-4 w-4 rotate-180" />
+                Back to wallet
+              </Link>
 
-        <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#20ad68]">
-            Billing
-          </p>
+              <p className="mat-eyebrow mt-6">Billing</p>
 
-          <h1 className="mt-1 font-display text-3xl text-[#17223b]">
-            Your subscription &amp; invoices
-          </h1>
+              <h1 className="mt-2 max-w-2xl font-display text-3xl text-[var(--mat-ink)] sm:text-4xl">
+                Your membership &amp; billing
+              </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your plan and review past payments.
-          </p>
-        </div>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--mat-muted)] sm:text-base">
+                Review your current membership state, billing date, payment
+                recovery options, and Stripe invoice history.
+              </p>
+            </div>
 
-        <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="border-t border-[var(--mat-border)] bg-[var(--mat-green-50)] p-6 sm:p-8 lg:border-l lg:border-t-0">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--mat-green-700)]">
+                Membership status
+              </p>
+
+              <p className="mt-3 font-display text-3xl text-[var(--mat-ink)]">
+                {statusLabel}
+              </p>
+
+              <p className="mt-3 text-sm leading-6 text-[var(--mat-muted)]">
+                {isTrialing
+                  ? "Your Premium trial is currently active."
+                  : isCancelScheduled
+                    ? "Your cancellation is scheduled for the end of the current billing period."
+                    : status === "active"
+                      ? "Your Premium membership is currently active."
+                      : isPaymentRecovery
+                        ? "Your membership needs payment attention."
+                        : status === "canceled"
+                          ? "Your Premium membership has ended."
+                          : "There is no active Premium membership on this account."}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
             <div className="flex items-center justify-between gap-4">
-              <h2 className="font-display text-lg text-[#17223b]">
-                Current plan
-              </h2>
+              <div>
+                <p className="mat-eyebrow">Membership</p>
+                <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                  Current plan
+                </h2>
+              </div>
 
               <span
                 className={
@@ -189,8 +219,8 @@ export default async function BillingPage() {
             </div>
 
             {hasPremium ? (
-              <div className="mt-4">
-                <div className="flex items-start gap-3 rounded-xl border border-[#cdeee1] bg-[#f0faf6] p-4">
+              <div className="mt-5">
+                <div className="flex items-start gap-3 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5">
                   <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#20ad68]" />
 
                   <div className="min-w-0">
@@ -261,7 +291,7 @@ export default async function BillingPage() {
                     ? "We could not complete your latest subscription payment. Choose how you would like to settle the outstanding balance."
                     : status === "canceled"
                       ? "Your Premium membership has ended. Choose a plan whenever you are ready to continue."
-                      : "Choose a membership plan to unlock every lesson and unlimited coaching."}
+                      : "Choose a membership plan when you are ready to continue with Premium access."}
                 </p>
 
                 {isPaymentRecovery &&
@@ -307,10 +337,19 @@ export default async function BillingPage() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h2 className="font-display text-lg text-[#17223b]">
-              Payment history
-            </h2>
+          <div className="rounded-[var(--mat-radius-xl)] border border-[var(--mat-border)] bg-white p-6 shadow-[var(--mat-shadow-sm)] sm:p-7">
+            <div>
+              <p className="mat-eyebrow">Invoices</p>
+
+              <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
+                Payment history
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
+                Stripe invoices associated with your membership appear here
+                when they are available.
+              </p>
+            </div>
 
             {invoices.length === 0 ? (
               <div className="mt-4 rounded-xl border border-dashed border-gray-200 bg-[#f8fbfa] p-6 text-center text-sm leading-6 text-gray-500">

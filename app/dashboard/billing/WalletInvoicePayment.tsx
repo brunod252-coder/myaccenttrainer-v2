@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type Props = {
   invoiceId: string;
@@ -32,25 +32,14 @@ export default function WalletInvoicePayment({
 }: Props) {
   const router = useRouter();
 
-  const [submitting, setSubmitting] =
-    useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [error, setError] =
-    useState<string | null>(null);
-
-  const hasEnough =
-    balanceMinor >= amountDueMinor;
-
-  const remainingMinor =
-    balanceMinor - amountDueMinor;
+  const hasEnough = balanceMinor >= amountDueMinor;
+  const remainingMinor = balanceMinor - amountDueMinor;
 
   async function payWithWallet() {
-    if (
-      submitting ||
-      !hasEnough
-    ) {
-      return;
-    }
+    if (submitting || !hasEnough) return;
 
     const confirmed = window.confirm(
       `Pay ${formatMoney(
@@ -59,9 +48,7 @@ export default function WalletInvoicePayment({
       )} from your My Accent Trainer wallet?`,
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setSubmitting(true);
     setError(null);
@@ -72,8 +59,7 @@ export default function WalletInvoicePayment({
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             invoiceId,
@@ -81,12 +67,14 @@ export default function WalletInvoicePayment({
         },
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
 
       if (!response.ok) {
         throw new Error(
-          data?.error ||
-            "Wallet payment failed.",
+          data.error || "Wallet payment failed.",
         );
       }
 
@@ -103,65 +91,63 @@ export default function WalletInvoicePayment({
   }
 
   return (
-    <div className="mt-5 rounded-xl border border-[#cdeee1] bg-[#f0faf6] p-4">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mt-5 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#17223b]">
-            My Accent Trainer Wallet
+          <p className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--mat-green-700)]">
+            Wallet payment
           </p>
 
-          <p className="mt-1 text-xs text-[#52719f]">
-            Use your available learning credit
-            toward this subscription invoice.
+          <h3 className="mt-1 font-display text-lg text-[var(--mat-ink)]">
+            Use your learning credit
+          </h3>
+
+          <p className="mt-2 max-w-md text-sm leading-6 text-[var(--mat-muted)]">
+            Apply available My Accent Trainer wallet credit to this
+            subscription invoice.
           </p>
         </div>
 
-        <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[#168c56]">
-          {formatMoney(
-            balanceMinor,
-            currencyCode,
-          )}
-        </span>
+        <div className="shrink-0 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-white px-4 py-3 sm:text-right">
+          <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--mat-muted-light)]">
+            Wallet balance
+          </p>
+
+          <p className="mt-1 font-semibold text-[var(--mat-ink)]">
+            {formatMoney(balanceMinor, currencyCode)}
+          </p>
+        </div>
       </div>
 
-      <div className="mt-4 space-y-2 border-t border-[#dcefe7] pt-4 text-sm">
-        <div className="flex justify-between gap-4">
-          <span className="text-gray-500">
+      <div className="mt-5 space-y-3 border-t border-[var(--mat-border-green)] pt-5 text-sm">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-[var(--mat-muted)]">
             Payment due
           </span>
 
-          <span className="font-semibold text-[#17223b]">
-            {formatMoney(
-              amountDueMinor,
-              currencyCode,
-            )}
+          <span className="font-semibold text-[var(--mat-ink)]">
+            {formatMoney(amountDueMinor, currencyCode)}
           </span>
         </div>
 
-        <div className="flex justify-between gap-4">
-          <span className="text-gray-500">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-[var(--mat-muted)]">
             Available balance
           </span>
 
-          <span className="font-semibold text-[#17223b]">
-            {formatMoney(
-              balanceMinor,
-              currencyCode,
-            )}
+          <span className="font-semibold text-[var(--mat-ink)]">
+            {formatMoney(balanceMinor, currencyCode)}
           </span>
         </div>
 
         {hasEnough ? (
-          <div className="flex justify-between gap-4">
-            <span className="text-gray-500">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[var(--mat-muted)]">
               Balance after payment
             </span>
 
-            <span className="font-semibold text-[#168c56]">
-              {formatMoney(
-                remainingMinor,
-                currencyCode,
-              )}
+            <span className="font-semibold text-[var(--mat-green-700)]">
+              {formatMoney(remainingMinor, currencyCode)}
             </span>
           </div>
         ) : null}
@@ -172,32 +158,36 @@ export default function WalletInvoicePayment({
           type="button"
           disabled={submitting}
           onClick={payWithWallet}
-          className="mt-4 w-full rounded-lg bg-[#20ad68] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#169357] disabled:cursor-not-allowed disabled:opacity-60"
+          className="mat-button mat-button-primary mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
         >
           {submitting
-            ? "Processing wallet payment..."
+            ? "Processing wallet payment…"
             : `Pay ${formatMoney(
                 amountDueMinor,
                 currencyCode,
               )} with wallet`}
         </button>
       ) : (
-        <div className="mt-4 rounded-lg border border-[#f2d6b3] bg-[#fff8ef] px-4 py-3 text-sm text-[#8a571c]">
-          Your wallet does not currently
-          have enough credit to pay this
+        <div
+          role="status"
+          className="mt-5 rounded-[var(--mat-radius-lg)] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+        >
+          Your wallet does not currently have enough credit to pay this
           invoice.
         </div>
       )}
 
       {error ? (
-        <p className="mt-3 text-sm font-medium text-[#b54747]">
+        <div
+          role="alert"
+          className="mt-4 rounded-[var(--mat-radius-lg)] border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"
+        >
           {error}
-        </p>
+        </div>
       ) : null}
 
-      <p className="mt-3 text-xs leading-5 text-gray-500">
-        Your wallet will not be charged
-        until you confirm the payment.
+      <p className="mt-4 text-xs leading-5 text-[var(--mat-muted-light)]">
+        Your wallet will not be charged until you confirm the payment.
       </p>
     </div>
   );
