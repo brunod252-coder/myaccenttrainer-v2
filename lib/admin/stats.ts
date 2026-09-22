@@ -296,3 +296,51 @@ export async function listAdminRecordings(
     return [];
   }
 }
+
+export type AdminReferralInviteRow = {
+  id: string;
+  inviterUserId: string;
+  friendEmail: string;
+  friendName: string | null;
+  referralCode: string;
+  status: "SENT" | "REGISTERED" | "SUBSCRIBED" | "REWARDED" | "CANCELLED";
+  createdAt: Date;
+  updatedAt: Date;
+  inviter: {
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+};
+
+export async function listAdminReferralInvites(
+  limit = 200,
+): Promise<AdminReferralInviteRow[]> {
+  try {
+    return await prisma.referralInvite.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: limit,
+      select: {
+        id: true,
+        inviterUserId: true,
+        friendEmail: true,
+        friendName: true,
+        referralCode: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+        inviter: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+  } catch {
+    return [];
+  }
+}
