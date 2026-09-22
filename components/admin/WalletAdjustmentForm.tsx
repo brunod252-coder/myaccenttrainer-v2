@@ -23,7 +23,13 @@ function dollarsToMinorUnits(value: string): number | null {
     return null;
   }
 
-  return Math.round(amount * 100);
+  const amountMinor = Math.round(amount * 100);
+
+  if (amountMinor > 10_000_000) {
+    return null;
+  }
+
+  return amountMinor;
 }
 
 export default function WalletAdjustmentForm({
@@ -55,7 +61,7 @@ export default function WalletAdjustmentForm({
     if (!amountMinor) {
       setMessage({
         type: "error",
-        text: "Enter a valid amount greater than zero, with no more than two decimal places.",
+        text: "Enter an amount from $0.01 through $100,000.00, with no more than two decimal places.",
       });
       return;
     }
@@ -136,23 +142,24 @@ export default function WalletAdjustmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-5 space-y-5">
+    <form onSubmit={handleSubmit} className="mt-6 space-y-5">
       <div>
         <label
           htmlFor="direction"
-          className="text-sm font-semibold text-[#17223b]"
+          className="text-sm font-semibold text-[var(--mat-ink)]"
         >
           Adjustment type
         </label>
 
         <select
           id="direction"
+          name="direction"
           value={direction}
           onChange={(event) =>
             setDirection(event.target.value as "CREDIT" | "DEBIT")
           }
           disabled={submitting}
-          className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#17223b] outline-none focus:border-[#20ad68]"
+          className="mt-2 w-full rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-white px-4 py-3 text-sm text-[var(--mat-ink)] outline-none transition focus:border-[var(--mat-green-700)] focus:ring-2 focus:ring-[var(--mat-green-50)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           <option value="CREDIT">Credit wallet</option>
           <option value="DEBIT">Debit wallet</option>
@@ -162,58 +169,71 @@ export default function WalletAdjustmentForm({
       <div>
         <label
           htmlFor="amount"
-          className="text-sm font-semibold text-[#17223b]"
+          className="text-sm font-semibold text-[var(--mat-ink)]"
         >
           Amount ({currencyCode})
         </label>
 
         <div className="relative mt-2">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--mat-muted-light)]">
             $
           </span>
 
           <input
             id="amount"
+            name="amount"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             inputMode="decimal"
             placeholder="0.00"
+            autoComplete="off"
+            aria-describedby="wallet-adjustment-amount-help"
             disabled={submitting}
-            className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-8 pr-4 text-sm text-[#17223b] outline-none focus:border-[#20ad68]"
+            className="w-full rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-white py-3 pl-8 pr-4 text-sm text-[var(--mat-ink)] outline-none transition placeholder:text-[var(--mat-muted-light)] focus:border-[var(--mat-green-700)] focus:ring-2 focus:ring-[var(--mat-green-50)] disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
+
+        <p
+          id="wallet-adjustment-amount-help"
+          className="mt-1 text-xs leading-5 text-[var(--mat-muted-light)]"
+        >
+          Enter an amount from $0.01 through $100,000.00.
+        </p>
       </div>
 
       <div>
         <label
           htmlFor="reason"
-          className="text-sm font-semibold text-[#17223b]"
+          className="text-sm font-semibold text-[var(--mat-ink)]"
         >
           Reason
         </label>
 
         <textarea
           id="reason"
+          name="reason"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           placeholder="Explain why this adjustment is being issued."
           rows={4}
           maxLength={240}
           disabled={submitting}
-          className="mt-2 w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-[#17223b] outline-none focus:border-[#20ad68]"
+          className="mt-2 w-full resize-none rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-white px-4 py-3 text-sm text-[var(--mat-ink)] outline-none transition placeholder:text-[var(--mat-muted-light)] focus:border-[var(--mat-green-700)] focus:ring-2 focus:ring-[var(--mat-green-50)] disabled:cursor-not-allowed disabled:opacity-60"
         />
 
-        <p className="mt-1 text-right text-xs text-gray-400">
+        <p className="mt-1 text-right text-xs text-[var(--mat-muted-light)]">
           {reason.length}/240
         </p>
       </div>
 
       {message && (
         <div
+          role={message.type === "error" ? "alert" : "status"}
+          aria-live="polite"
           className={[
-            "rounded-xl border px-4 py-3 text-sm",
+            "rounded-[var(--mat-radius-lg)] border px-4 py-3 text-sm leading-6",
             message.type === "success"
-              ? "border-[#bcebd5] bg-[#edf9f4] text-[#126f45]"
+              ? "border-[var(--mat-border-green)] bg-[var(--mat-green-50)] text-[var(--mat-green-800)]"
               : "border-red-200 bg-red-50 text-red-700",
           ].join(" ")}
         >
@@ -225,9 +245,9 @@ export default function WalletAdjustmentForm({
         type="submit"
         disabled={submitting}
         className={[
-          "w-full rounded-xl px-5 py-3 text-sm font-bold text-white transition",
+          "w-full rounded-[var(--mat-radius-lg)] px-5 py-3 text-sm font-semibold text-white transition",
           direction === "CREDIT"
-            ? "bg-[#20ad68] hover:bg-[#168c56]"
+            ? "bg-[var(--mat-green-700)] hover:bg-[var(--mat-green-800)]"
             : "bg-[#b94040] hover:bg-[#9d3434]",
           submitting ? "cursor-not-allowed opacity-60" : "",
         ].join(" ")}
@@ -239,10 +259,16 @@ export default function WalletAdjustmentForm({
             : "Record debit"}
       </button>
 
-      <p className="text-xs leading-5 text-gray-400">
-        Every adjustment creates a permanent ledger transaction. Wallet balances
-        are never overwritten directly.
-      </p>
+      <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--mat-green-700)]">
+          Permanent ledger entry
+        </p>
+
+        <p className="mt-1 text-xs leading-5 text-[var(--mat-muted)]">
+          Every adjustment creates a permanent ledger transaction. Wallet balances
+          are never overwritten directly.
+        </p>
+      </div>
     </form>
   );
 }
