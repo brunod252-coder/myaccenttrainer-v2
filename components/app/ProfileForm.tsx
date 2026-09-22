@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
 import { LEARNING_MISSIONS } from "@/lib/learning/mission";
 
 type Initial = {
@@ -13,7 +14,18 @@ type Initial = {
   proficiencyLevel: string;
 };
 
-const LANGUAGES = ["French", "Spanish", "Mandarin", "Hindi", "Arabic", "Portuguese", "Korean", "Vietnamese", "Other"];
+const LANGUAGES = [
+  "French",
+  "Spanish",
+  "Mandarin",
+  "Hindi",
+  "Arabic",
+  "Portuguese",
+  "Korean",
+  "Vietnamese",
+  "Other",
+];
+
 const GOALS = [
   LEARNING_MISSIONS.INTERVIEWS,
   LEARNING_MISSIONS.PRESENTATIONS,
@@ -22,28 +34,55 @@ const GOALS = [
   LEARNING_MISSIONS.PROFESSIONAL,
   LEARNING_MISSIONS.EVERYDAY_CONVERSATION,
 ];
+
 const LEVELS = ["Beginner", "Intermediate", "Advanced"];
 
-export default function ProfileForm({ initial }: { initial: Initial }) {
+export default function ProfileForm({
+  initial,
+}: {
+  initial: Initial;
+}) {
   const router = useRouter();
-  const [form, setForm] = useState<Initial>(initial);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
-  function update<K extends keyof Initial>(key: K, value: string) {
-    setForm((f) => ({ ...f, [key]: value }));
+  const [form, setForm] = useState<Initial>(initial);
+  const [status, setStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+
+  function update<K extends keyof Initial>(
+    key: K,
+    value: string,
+  ) {
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
+
     setStatus("idle");
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    if (status === "saving") return;
+
     setStatus("saving");
+
     try {
-      const res = await fetch("/api/profile", {
+      const response = await fetch("/api/profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error();
+
+      if (!response.ok) {
+        throw new Error();
+      }
+
       setStatus("saved");
       router.refresh();
     } catch {
@@ -51,57 +90,191 @@ export default function ProfileForm({ initial }: { initial: Initial }) {
     }
   }
 
-  const inputClass =
-    "mt-2 w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-[#20ad68] focus:ring-2 focus:ring-[#20ad68]/20";
+  const fieldClass =
+    "mat-input mt-2 w-full disabled:cursor-not-allowed disabled:opacity-60";
+
+  const saving = status === "saving";
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-semibold text-gray-700">
-          First name
-          <input className={inputClass} value={form.firstName} onChange={(e) => update("firstName", e.target.value)} />
-        </label>
-        <label className="block text-sm font-semibold text-gray-700">
-          Last name
-          <input className={inputClass} value={form.lastName} onChange={(e) => update("lastName", e.target.value)} />
-        </label>
-        <label className="block text-sm font-semibold text-gray-700">
-          Country
-          <input className={inputClass} value={form.countryOfResidence} placeholder="e.g. Canada" onChange={(e) => update("countryOfResidence", e.target.value)} />
-        </label>
-        <label className="block text-sm font-semibold text-gray-700">
-          Native language
-          <select className={inputClass} value={form.nativeLanguage} onChange={(e) => update("nativeLanguage", e.target.value)}>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="profile-first-name"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            First name
+          </label>
+
+          <input
+            id="profile-first-name"
+            type="text"
+            autoComplete="given-name"
+            maxLength={80}
+            disabled={saving}
+            className={fieldClass}
+            value={form.firstName}
+            onChange={(event) =>
+              update("firstName", event.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-last-name"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            Last name
+          </label>
+
+          <input
+            id="profile-last-name"
+            type="text"
+            autoComplete="family-name"
+            maxLength={80}
+            disabled={saving}
+            className={fieldClass}
+            value={form.lastName}
+            onChange={(event) =>
+              update("lastName", event.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-country"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            Country of residence
+          </label>
+
+          <input
+            id="profile-country"
+            type="text"
+            autoComplete="country-name"
+            maxLength={80}
+            disabled={saving}
+            className={fieldClass}
+            value={form.countryOfResidence}
+            placeholder="e.g. Canada"
+            onChange={(event) =>
+              update("countryOfResidence", event.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-native-language"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            Native language
+          </label>
+
+          <select
+            id="profile-native-language"
+            disabled={saving}
+            className={fieldClass}
+            value={form.nativeLanguage}
+            onChange={(event) =>
+              update("nativeLanguage", event.target.value)
+            }
+          >
             <option value="">Select…</option>
-            {LANGUAGES.map((l) => (<option key={l} value={l}>{l}</option>))}
+
+            {LANGUAGES.map((language) => (
+              <option key={language} value={language}>
+                {language}
+              </option>
+            ))}
           </select>
-        </label>
-        <label className="block text-sm font-semibold text-gray-700">
-          English goal
-          <select className={inputClass} value={form.englishGoal} onChange={(e) => update("englishGoal", e.target.value)}>
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-english-goal"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            English goal
+          </label>
+
+          <select
+            id="profile-english-goal"
+            disabled={saving}
+            className={fieldClass}
+            value={form.englishGoal}
+            onChange={(event) =>
+              update("englishGoal", event.target.value)
+            }
+          >
             <option value="">Select…</option>
-            {GOALS.map((g) => (<option key={g} value={g}>{g}</option>))}
+
+            {GOALS.map((goal) => (
+              <option key={goal} value={goal}>
+                {goal}
+              </option>
+            ))}
           </select>
-        </label>
-        <label className="block text-sm font-semibold text-gray-700">
-          Proficiency
-          <select className={inputClass} value={form.proficiencyLevel} onChange={(e) => update("proficiencyLevel", e.target.value)}>
+        </div>
+
+        <div>
+          <label
+            htmlFor="profile-proficiency"
+            className="text-sm font-semibold text-[var(--mat-ink)]"
+          >
+            Proficiency
+          </label>
+
+          <select
+            id="profile-proficiency"
+            disabled={saving}
+            className={fieldClass}
+            value={form.proficiencyLevel}
+            onChange={(event) =>
+              update("proficiencyLevel", event.target.value)
+            }
+          >
             <option value="">Select…</option>
-            {LEVELS.map((l) => (<option key={l} value={l}>{l}</option>))}
+
+            {LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
           </select>
-        </label>
+        </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-4">
-        <button
-          type="submit"
-          disabled={status === "saving"}
-          className="rounded-lg bg-[#20ad68] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#169357] disabled:opacity-60"
-        >
-          {status === "saving" ? "Saving…" : "Save changes"}
-        </button>
-        {status === "saved" && <span className="text-sm font-medium text-[#2e7d5b]">Saved ✓</span>}
-        {status === "error" && <span className="text-sm font-medium text-[#d1495b]">Couldn&apos;t save — try again.</span>}
+      <div className="mt-6 border-t border-[var(--mat-border)] pt-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <button
+            type="submit"
+            disabled={saving}
+            className="mat-button mat-button-primary justify-center disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+
+          {status === "saved" ? (
+            <div
+              role="status"
+              className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border-green)] bg-[var(--mat-green-50)] px-4 py-2.5 text-sm font-medium text-[var(--mat-green-800)]"
+            >
+              Profile changes saved.
+            </div>
+          ) : null}
+
+          {status === "error" ? (
+            <div
+              role="alert"
+              className="rounded-[var(--mat-radius-lg)] border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900"
+            >
+              Couldn&apos;t save your changes. Please try again.
+            </div>
+          ) : null}
+        </div>
       </div>
     </form>
   );
