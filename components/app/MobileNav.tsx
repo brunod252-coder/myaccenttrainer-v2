@@ -169,7 +169,7 @@ export default function MobileNav() {
             onClick={close}
           />
 
-          <aside className="absolute left-0 top-0 flex h-full w-[min(86vw,320px)] flex-col border-r border-[var(--mat-border)] bg-white px-4 py-5 shadow-[var(--mat-shadow-lg)]">
+          <aside className="absolute left-0 top-0 flex h-dvh w-[min(86vw,320px)] flex-col overflow-hidden border-r border-[var(--mat-border)] bg-white px-4 py-5 shadow-[var(--mat-shadow-lg)]">
             <div className="flex items-center justify-between px-2">
               <Link
                 href="/dashboard"
@@ -200,7 +200,7 @@ export default function MobileNav() {
               </button>
             </div>
 
-            <nav className="mt-7 space-y-6 overflow-y-auto pb-6">
+            <nav className="mt-7 min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain pb-6">
               <MobileSection
                 label="Learn"
                 items={learning}
@@ -216,7 +216,7 @@ export default function MobileNav() {
               />
             </nav>
 
-            <div className="mt-auto border-t border-[var(--mat-border)] pt-4">
+            <div className="shrink-0 border-t border-[var(--mat-border)] bg-white pt-4">
               <Link
                 href="/dashboard/nina"
                 onClick={close}
