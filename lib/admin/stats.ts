@@ -193,7 +193,29 @@ export function getIntegrationStatus() {
     { key: "Auth (JWT)", ok: Boolean(process.env.JWT_SECRET), note: process.env.JWT_SECRET ? "Configured" : "Using dev default", detail: "Set JWT_SECRET before launch" },
     { key: "Payments (Stripe)", ok: Boolean(process.env.STRIPE_SECRET_KEY), note: process.env.STRIPE_SECRET_KEY ? "Live" : "Not configured", detail: "STRIPE_SECRET_KEY + price IDs" },
     { key: "Speech (Azure)", ok: Boolean(process.env.AZURE_SPEECH_KEY), note: process.env.AZURE_SPEECH_KEY ? "Live" : "Practice-estimate mode", detail: "AZURE_SPEECH_KEY + region" },
-    { key: "Email (Resend)", ok: Boolean(process.env.RESEND_API_KEY), note: process.env.RESEND_API_KEY ? "Live" : "Dev logging mode", detail: "RESEND_API_KEY to send real emails" },
+    {
+      key: "Email (AWS SES)",
+      ok:
+        process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "ses" &&
+        process.env.ALLOW_REAL_EMAIL_SENDS?.trim().toLowerCase() === "true" &&
+        Boolean(process.env.SES_FROM_EMAIL?.trim()) &&
+        Boolean(
+          process.env.SES_REGION?.trim() ||
+            process.env.AWS_REGION?.trim(),
+        ),
+      note:
+        process.env.EMAIL_PROVIDER?.trim().toLowerCase() === "ses" &&
+        process.env.ALLOW_REAL_EMAIL_SENDS?.trim().toLowerCase() === "true" &&
+        Boolean(process.env.SES_FROM_EMAIL?.trim()) &&
+        Boolean(
+          process.env.SES_REGION?.trim() ||
+            process.env.AWS_REGION?.trim(),
+        )
+          ? "Real-send mode enabled"
+          : "Real-send mode not fully configured",
+      detail:
+        "EMAIL_PROVIDER=ses + real-send flag + sender + AWS region",
+    },
   ];
 }
 
