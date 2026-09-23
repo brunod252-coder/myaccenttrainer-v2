@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicMobileNav from "@/components/site/PublicMobileNav";
 import {
   getMarketingDestination,
   getMarketingSessionUser,
@@ -46,7 +47,9 @@ export default async function Header() {
           ))}
         </nav>
 
-        {user ? (
+        <PublicMobileNav />
+
+          {user ? (
           <div className="flex items-center gap-3">
             {user.firstName && (
               <span className="hidden text-sm text-gray-600 sm:block">
