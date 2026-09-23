@@ -172,9 +172,10 @@ export default function MobileNav() {
           <aside className="absolute left-0 top-0 flex h-dvh w-[min(86vw,320px)] flex-col overflow-hidden border-r border-[var(--mat-border)] bg-white px-4 py-5 shadow-[var(--mat-shadow-lg)]">
             <div className="flex items-center justify-between px-2">
               <Link
-                href="/dashboard"
+                href="/"
                 onClick={close}
                 className="flex items-center gap-2"
+                aria-label="MyAccentTrainer home"
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white">
                   <Mic className="h-[18px] w-[18px]" />
@@ -224,6 +225,20 @@ export default function MobileNav() {
               >
                 <Sparkle className="h-[18px] w-[18px]" />
                 Continue with Nina
+              </Link>
+
+              <Link
+                href="/"
+                onClick={close}
+                className="mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-[var(--mat-muted)] transition hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]"
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-[18px] w-[18px] items-center justify-center text-base leading-none"
+                >
+                  ←
+                </span>
+                Home
               </Link>
 
               <form action="/api/auth/logout" method="post">

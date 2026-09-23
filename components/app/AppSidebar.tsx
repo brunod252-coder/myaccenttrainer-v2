@@ -165,9 +165,9 @@ export default function AppSidebar({ userName, role }: Props) {
   return (
     <aside className="sticky top-0 hidden h-screen w-[252px] flex-col border-r border-[var(--mat-border)] bg-white px-4 py-5 lg:flex">
       <Link
-        href="/dashboard"
+        href="/"
         className="flex items-center gap-2 rounded-xl px-2 py-2"
-        aria-label="MyAccentTrainer dashboard"
+        aria-label="MyAccentTrainer home"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--mat-green-600)] text-white shadow-[var(--mat-shadow-sm)]">
           <Mic className="h-[18px] w-[18px]" />
@@ -248,7 +248,20 @@ export default function AppSidebar({ userName, role }: Props) {
             </div>
           </div>
 
-          <form action="/api/auth/logout" method="post" className="mt-2">
+          <Link
+            href="/"
+            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--mat-muted)] transition hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]"
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-[18px] w-[18px] items-center justify-center text-base leading-none"
+            >
+              ←
+            </span>
+            Home
+          </Link>
+
+          <form action="/api/auth/logout" method="post" className="mt-1">
             <button
               type="submit"
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--mat-muted)] transition hover:bg-[var(--mat-surface-soft)] hover:text-[var(--mat-ink)]"
