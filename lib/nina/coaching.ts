@@ -36,7 +36,11 @@ export type CoachingPlan = {
   streakDays: number;
   practicedToday: boolean;
   weekReview: Review;
-  monthReview: { thisMonth: string; attempts: number; avg: number } | null;
+  monthReview: {
+    thisMonth: string;
+    attempts: number;
+    avg: number | null;
+  } | null;
   clarityNow: number | null;
   clarityTargetProgress: number | null; // 0..100 toward clarity target
 };

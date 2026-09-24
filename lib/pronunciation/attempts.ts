@@ -10,7 +10,12 @@
 import { prisma } from "@/lib/prisma";
 import type { PronunciationResult } from "./types";
 
-type AttemptRow = { overall: number; focus: string | null; createdAt: Date };
+type AttemptRow = {
+  overall: number;
+  focus: string | null;
+  source: string;
+  createdAt: Date;
+};
 
 const FOCUS_LABELS: Record<string, string> = {
   r: "R", l: "L", th: "TH", v: "V", w: "W",
@@ -55,19 +60,52 @@ export type ClarityStats = {
   streakDays: number;
 };
 
-export async function getClarityStats(userId: string): Promise<ClarityStats> {
+export async function getClarityStats(
+  userId: string,
+): Promise<ClarityStats> {
   try {
     const rows = await db().pronunciationAttempt.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 60,
     });
-    if (!rows.length) return { clarity: null, attempts: 0, streakDays: 0 };
-    const recent = rows.slice(0, 5);
-    const clarity = Math.round(recent.reduce((sum, r) => sum + r.overall, 0) / recent.length);
-    return { clarity, attempts: rows.length, streakDays: computeStreak(rows.map((r) => r.createdAt)) };
+
+    if (!rows.length) {
+      return {
+        clarity: null,
+        attempts: 0,
+        streakDays: 0,
+      };
+    }
+
+    const measured = rows.filter(
+      (row) => row.source === "azure",
+    );
+
+    const recentMeasured = measured.slice(0, 5);
+
+    const clarity = recentMeasured.length
+      ? Math.round(
+          recentMeasured.reduce(
+            (sum, row) => sum + row.overall,
+            0,
+          ) / recentMeasured.length,
+        )
+      : null;
+
+    return {
+      clarity,
+      attempts: rows.length,
+      streakDays: computeStreak(
+        rows.map((row) => row.createdAt),
+      ),
+    };
   } catch {
-    return { clarity: null, attempts: 0, streakDays: 0 };
+    return {
+      clarity: null,
+      attempts: 0,
+      streakDays: 0,
+    };
   }
 }
 
@@ -79,39 +117,95 @@ export type ProgressData = {
   soundMastery: { label: string; score: number }[];
 };
 
-export async function getProgressData(userId: string): Promise<ProgressData> {
+export async function getProgressData(
+  userId: string,
+): Promise<ProgressData> {
   try {
     const rows = await db().pronunciationAttempt.findMany({
       where: { userId },
       orderBy: { createdAt: "asc" },
       take: 300,
     });
+
     if (!rows.length) {
-      return { clarity: null, attempts: 0, streakDays: 0, trend: [], soundMastery: [] };
+      return {
+        clarity: null,
+        attempts: 0,
+        streakDays: 0,
+        trend: [],
+        soundMastery: [],
+      };
     }
 
-    const overalls = rows.map((r) => r.overall);
+    const measured = rows.filter(
+      (row) => row.source === "azure",
+    );
+
+    const overalls = measured.map(
+      (row) => row.overall,
+    );
+
     const recent = overalls.slice(-5);
-    const clarity = Math.round(recent.reduce((a, b) => a + b, 0) / recent.length);
-    const trend = overalls.slice(-10);
-    const streakDays = computeStreak(rows.map((r) => r.createdAt));
 
-    const byFocus = new Map<string, { sum: number; n: number }>();
-    for (const r of rows) {
-      const f = r.focus || "other";
-      const cur = byFocus.get(f) || { sum: 0, n: 0 };
-      cur.sum += r.overall;
-      cur.n += 1;
-      byFocus.set(f, cur);
+    const clarity = recent.length
+      ? Math.round(
+          recent.reduce(
+            (sum, score) => sum + score,
+            0,
+          ) / recent.length,
+        )
+      : null;
+
+    const trend = overalls.slice(-10);
+
+    const streakDays = computeStreak(
+      rows.map((row) => row.createdAt),
+    );
+
+    const byFocus = new Map<
+      string,
+      { sum: number; n: number }
+    >();
+
+    for (const row of measured) {
+      const focus = row.focus || "other";
+
+      const current = byFocus.get(focus) || {
+        sum: 0,
+        n: 0,
+      };
+
+      current.sum += row.overall;
+      current.n += 1;
+
+      byFocus.set(focus, current);
     }
+
     const soundMastery = [...byFocus.entries()]
-      .map(([f, v]) => ({ label: FOCUS_LABELS[f] || f, score: Math.round(v.sum / v.n) }))
+      .map(([focus, value]) => ({
+        label: FOCUS_LABELS[focus] || focus,
+        score: Math.round(
+          value.sum / value.n,
+        ),
+      }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
 
-    return { clarity, attempts: rows.length, streakDays, trend, soundMastery };
+    return {
+      clarity,
+      attempts: rows.length,
+      streakDays,
+      trend,
+      soundMastery,
+    };
   } catch {
-    return { clarity: null, attempts: 0, streakDays: 0, trend: [], soundMastery: [] };
+    return {
+      clarity: null,
+      attempts: 0,
+      streakDays: 0,
+      trend: [],
+      soundMastery: [],
+    };
   }
 }
 
@@ -137,7 +231,7 @@ export async function getPreviousAttemptScore(
   if (!focus) return null;
   try {
     const prev = await db().pronunciationAttempt.findFirst({
-      where: { userId, focus },
+      where: { userId, focus, source: "azure" },
       orderBy: { createdAt: "desc" },
       select: { overall: true },
     });

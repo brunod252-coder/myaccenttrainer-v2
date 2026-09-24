@@ -15,6 +15,7 @@ type AttemptRow = {
   focus: string | null;
   lessonSlug: string | null;
   referenceText: string | null;
+  source: string;
   createdAt: Date;
 };
 
@@ -124,6 +125,7 @@ function baseMilestones(attempts: number, clarity: number | null, mastered: Soun
 
 export async function getNinaBrain(userId: string): Promise<NinaBrain> {
   let rows: AttemptRow[] = [];
+
   try {
     rows = await db().pronunciationAttempt.findMany({
       where: { userId },
@@ -133,91 +135,280 @@ export async function getNinaBrain(userId: string): Promise<NinaBrain> {
   } catch {
     return emptyBrain();
   }
+
   if (!rows.length) return emptyBrain();
 
-  const overalls = rows.map((r) => r.overall);
-  const clarity = avg(overalls.slice(-5));
-  const firstClarity = avg(overalls.slice(0, Math.min(3, overalls.length)));
-  const daysPracticed = new Set(rows.map((r) => new Date(r.createdAt).toDateString())).size;
-  const streakDays = computeStreak(rows.map((r) => r.createdAt));
+  // Practice activity includes every real recording attempt, including
+  // historical practice estimates.
+  const daysPracticed = new Set(
+    rows.map((r) => new Date(r.createdAt).toDateString()),
+  ).size;
 
-  // personal best
-  const bestRow = rows.reduce((best, r) => (r.overall > best.overall ? r : best), rows[0]);
-  const personalBest = { overall: bestRow.overall, label: labelFor(bestRow.focus), date: bestRow.createdAt };
+  const streakDays = computeStreak(
+    rows.map((r) => r.createdAt),
+  );
 
-  // latest + comparison vs previous attempt of the SAME focus
-  const latestRow = rows[rows.length - 1];
-  const latest = {
-    overall: latestRow.overall, label: labelFor(latestRow.focus), focus: latestRow.focus, date: latestRow.createdAt,
+  // Speech-quality intelligence must come only from assessments that
+  // actually analyzed the learner's audio.
+  const measured = rows.filter(
+    (r) => r.source === "azure",
+  );
+
+  if (!measured.length) {
+    return {
+      ...emptyBrain(),
+      hasData: true,
+      totalAttempts: rows.length,
+      daysPracticed,
+      streakDays,
+      milestones: baseMilestones(
+        rows.length,
+        null,
+        [],
+        streakDays,
+      ),
+      longTerm:
+        `You've completed ${rows.length} practice ${
+          rows.length === 1 ? "recording" : "recordings"
+        } across ${daysPracticed} ${
+          daysPracticed === 1 ? "day" : "days"
+        }. Complete a measured speech assessment to establish your clarity baseline.`,
+    };
+  }
+
+  const overalls = measured.map(
+    (r) => r.overall,
+  );
+
+  const clarity = avg(
+    overalls.slice(-5),
+  );
+
+  const firstClarity = avg(
+    overalls.slice(
+      0,
+      Math.min(3, overalls.length),
+    ),
+  );
+
+  // Personal best is meaningful only among measured assessments.
+  const bestRow = measured.reduce(
+    (best, r) =>
+      r.overall > best.overall ? r : best,
+    measured[0],
+  );
+
+  const personalBest = {
+    overall: bestRow.overall,
+    label: labelFor(bestRow.focus),
+    date: bestRow.createdAt,
   };
+
+  // Latest + comparison use measured attempts only.
+  const latestRow =
+    measured[measured.length - 1];
+
+  const latest = {
+    overall: latestRow.overall,
+    label: labelFor(latestRow.focus),
+    focus: latestRow.focus,
+    date: latestRow.createdAt,
+  };
+
   let comparison: NinaBrain["comparison"] = null;
-  const sameFocusPrev = [...rows].slice(0, -1).reverse().find((r) => r.focus === latestRow.focus);
+
+  const sameFocusPrev = [...measured]
+    .slice(0, -1)
+    .reverse()
+    .find(
+      (r) => r.focus === latestRow.focus,
+    );
+
   if (sameFocusPrev) {
-    const delta = latestRow.overall - sameFocusPrev.overall;
-    comparison = { previous: sameFocusPrev.overall, delta, direction: delta > 1 ? "up" : delta < -1 ? "down" : "same" };
+    const delta =
+      latestRow.overall -
+      sameFocusPrev.overall;
+
+    comparison = {
+      previous: sameFocusPrev.overall,
+      delta,
+      direction:
+        delta > 1
+          ? "up"
+          : delta < -1
+            ? "down"
+            : "same",
+    };
   }
 
-  // per-sound stats
-  const byFocus = new Map<string, AttemptRow[]>();
-  for (const r of rows) {
-    const f = r.focus || "general";
-    (byFocus.get(f) || byFocus.set(f, []).get(f)!).push(r);
+  // Per-sound quality statistics use measured assessments only.
+  const byFocus =
+    new Map<string, AttemptRow[]>();
+
+  for (const r of measured) {
+    const focus =
+      r.focus || "general";
+
+    (
+      byFocus.get(focus) ||
+      byFocus.set(focus, []).get(focus)!
+    ).push(r);
   }
+
   const sounds: SoundStat[] = [];
-  for (const [focus, list] of byFocus.entries()) {
-    const vals = list.map((r) => r.overall);
-    const half = Math.max(1, Math.floor(list.length / 2));
-    const earlierAvg = avg(vals.slice(0, half));
-    const recentAvg = avg(vals.slice(-half));
-    const a = avg(vals);
-    const delta = recentAvg - earlierAvg;
-    let status: SoundStat["status"] = "steady";
-    if (a >= 85) status = "mastered";
-    else if (delta >= 5) status = "improving";
-    else if (delta <= -5) status = "needs-work";
+
+  for (
+    const [focus, list]
+    of byFocus.entries()
+  ) {
+    const values = list.map(
+      (r) => r.overall,
+    );
+
+    const half = Math.max(
+      1,
+      Math.floor(list.length / 2),
+    );
+
+    const earlierAvg = avg(
+      values.slice(0, half),
+    );
+
+    const recentAvg = avg(
+      values.slice(-half),
+    );
+
+    const average = avg(values);
+
+    const delta =
+      recentAvg - earlierAvg;
+
+    let status: SoundStat["status"] =
+      "steady";
+
+    if (average >= 85) {
+      status = "mastered";
+    } else if (delta >= 5) {
+      status = "improving";
+    } else if (delta <= -5) {
+      status = "needs-work";
+    }
+
     sounds.push({
-      focus, label: labelFor(focus), attempts: list.length, avg: a, best: Math.max(...vals),
-      recentAvg, earlierAvg, delta, status,
+      focus,
+      label: labelFor(focus),
+      attempts: list.length,
+      avg: average,
+      best: Math.max(...values),
+      recentAvg,
+      earlierAvg,
+      delta,
+      status,
     });
   }
-  sounds.sort((a, b) => a.avg - b.avg);
 
-  const rated = sounds.filter((s) => s.attempts >= 2);
-  const weakest = (rated.length ? rated : sounds)[0] || null;
-  if (weakest) weakest.status = weakest.status === "mastered" ? "mastered" : "weakest";
-  const strongest = sounds.length ? sounds[sounds.length - 1] : null;
-  const improving = sounds.filter((s) => s.delta >= 5).sort((a, b) => b.delta - a.delta);
-  const regressing = sounds.filter((s) => s.delta <= -5).sort((a, b) => a.delta - b.delta);
-  const mastered = sounds.filter((s) => s.avg >= 85);
-  const mostPracticed = [...sounds].sort((a, b) => b.attempts - a.attempts)[0] || null;
+  sounds.sort(
+    (a, b) => a.avg - b.avg,
+  );
 
-  // plan for tomorrow: focus the weakest rated sound (or the latest one)
-  const planTarget = weakest || strongest;
+  const rated = sounds.filter(
+    (s) => s.attempts >= 2,
+  );
+
+  const weakest =
+    (rated.length ? rated : sounds)[0] ||
+    null;
+
+  if (weakest) {
+    weakest.status =
+      weakest.status === "mastered"
+        ? "mastered"
+        : "weakest";
+  }
+
+  const strongest = sounds.length
+    ? sounds[sounds.length - 1]
+    : null;
+
+  const improving = sounds
+    .filter((s) => s.delta >= 5)
+    .sort(
+      (a, b) => b.delta - a.delta,
+    );
+
+  const regressing = sounds
+    .filter((s) => s.delta <= -5)
+    .sort(
+      (a, b) => a.delta - b.delta,
+    );
+
+  const mastered = sounds.filter(
+    (s) => s.avg >= 85,
+  );
+
+  const mostPracticed =
+    [...sounds].sort(
+      (a, b) =>
+        b.attempts - a.attempts,
+    )[0] || null;
+
+  // Coaching plans are based only on measured sound quality.
+  const planTarget =
+    weakest || strongest;
+
   const plan = planTarget
     ? {
         focus: planTarget.focus,
         label: planTarget.label,
         reason:
-          planTarget.status === "needs-work"
+          planTarget.status ===
+          "needs-work"
             ? `${planTarget.label} slipped a little recently — a short focused session will bring it back.`
             : planTarget.avg < 70
-            ? `${planTarget.label} is your biggest opportunity right now. A few clear reps will move your overall clarity the most.`
-            : `Keep ${planTarget.label} sharp with a quick warm-up, then push into a new sound.`,
-        phrase: FOCUS_PHRASES[planTarget.focus] || "Practice your target sound slowly and clearly.",
+              ? `${planTarget.label} is your biggest opportunity right now. A few clear reps will move your overall clarity the most.`
+              : `Keep ${planTarget.label} sharp with a quick warm-up, then push into a new sound.`,
+        phrase:
+          FOCUS_PHRASES[
+            planTarget.focus
+          ] ||
+          "Practice your target sound slowly and clearly.",
       }
     : null;
 
-  // long-term narrative
-  const trendWord = clarity > firstClarity + 2 ? "climbing" : clarity < firstClarity - 2 ? "dipping" : "holding steady";
-  const longTerm =
-    `Over ${rows.length} recording${rows.length === 1 ? "" : "s"} across ${daysPracticed} day${daysPracticed === 1 ? "" : "s"}, ` +
-    `your clarity has moved from about ${firstClarity} to ${clarity} — ${trendWord}. ` +
-    (mastered.length
-      ? `You've mastered ${mastered.length} sound${mastered.length === 1 ? "" : "s"}. `
-      : "") +
-    (weakest ? `Right now, ${weakest.label} is where a little focus will pay off most.` : "");
+  const trendWord =
+    clarity > firstClarity + 2
+      ? "climbing"
+      : clarity < firstClarity - 2
+        ? "dipping"
+        : "holding steady";
 
-  const milestones = baseMilestones(rows.length, clarity, mastered, streakDays);
+  const longTerm =
+    `Across ${measured.length} measured recording${
+      measured.length === 1 ? "" : "s"
+    }, your clarity has moved from about ${firstClarity} to ${clarity} — ${trendWord}. ` +
+    (
+      mastered.length
+        ? `You've mastered ${mastered.length} sound${
+            mastered.length === 1
+              ? ""
+              : "s"
+          }. `
+        : ""
+    ) +
+    (
+      weakest
+        ? `Right now, ${weakest.label} is where a little focus will pay off most.`
+        : ""
+    );
+
+  // Recording-count and streak milestones remain genuine activity
+  // milestones; clarity/mastery milestones use measured data.
+  const milestones = baseMilestones(
+    rows.length,
+    clarity,
+    mastered,
+    streakDays,
+  );
 
   return {
     hasData: true,
@@ -229,7 +420,7 @@ export async function getNinaBrain(userId: string): Promise<NinaBrain> {
     personalBest,
     latest,
     comparison,
-    sounds: sounds.slice().reverse(), // strongest first for display
+    sounds: sounds.slice().reverse(),
     strongest,
     weakest,
     improving,

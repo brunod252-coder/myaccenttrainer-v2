@@ -41,7 +41,7 @@ export default async function CoachingPage() {
               </h1>
 
               <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
-                Nina combines your learning goal, recent practice, and scored
+                Nina combines your learning goal, recent practice, and measured
                 speaking evidence to recommend what to work on next.
               </p>
             </div>
@@ -234,7 +234,7 @@ export default async function CoachingPage() {
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
-                A snapshot of your recent consistency and scored clarity.
+                A snapshot of your recent consistency and measured clarity.
               </p>
             </div>
 
@@ -285,8 +285,8 @@ export default async function CoachingPage() {
 
                 <p className="mt-1 text-xs text-[var(--mat-muted-light)]">
                   {plan.clarityNow !== null
-                    ? "From your scored practice"
-                    : "No scored clarity yet"}
+                    ? "From your measured practice"
+                    : "Not measured yet"}
                 </p>
               </div>
             </div>
@@ -301,7 +301,7 @@ export default async function CoachingPage() {
                       </p>
 
                       <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
-                        Current scored clarity compared with your saved target
+                        Current measured clarity compared with your saved target
                         of {plan.goal.clarityTarget}.
                       </p>
                     </div>
@@ -377,7 +377,7 @@ export default async function CoachingPage() {
                   </p>
 
                   <p className="mt-1 text-xs text-[var(--mat-muted)]">
-                    scored attempts
+                    practice attempts
                   </p>
                 </div>
 
@@ -391,7 +391,7 @@ export default async function CoachingPage() {
                   </p>
 
                   <p className="mt-1 text-xs text-[var(--mat-muted)]">
-                    scored attempts
+                    practice attempts
                   </p>
                 </div>
 
@@ -454,7 +454,9 @@ export default async function CoachingPage() {
                       </p>
 
                       <p className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
-                        {plan.monthReview.avg}
+                        {plan.monthReview.avg !== null
+                          ? plan.monthReview.avg
+                          : "Not measured yet"}
                       </p>
                     </div>
                   </div>

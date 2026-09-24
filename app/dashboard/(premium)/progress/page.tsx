@@ -70,7 +70,7 @@ export default async function ProgressPage() {
 
               <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
                 Follow your clarity, consistency, completed lessons, and the
-                sounds you&apos;re strengthening through scored practice.
+                sounds you&apos;re strengthening through measured practice.
               </p>
             </div>
 
@@ -96,14 +96,14 @@ export default async function ProgressPage() {
 
               <p className="mt-1 text-xs leading-5 text-[var(--mat-muted)]">
                 {progress.clarity === null
-                  ? "Complete scored practice to establish your clarity."
-                  : "Average across your scored attempts."}
+                  ? "Complete a measured speech assessment to establish your clarity."
+                  : "Average across your measured attempts."}
               </p>
             </div>
 
             <div className="rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-5">
               <p className="text-sm font-semibold text-[var(--mat-ink)]">
-                Scored attempts
+                Practice attempts
               </p>
 
               <p className="mt-2 font-display text-3xl text-[var(--mat-ink)]">
@@ -148,7 +148,7 @@ export default async function ProgressPage() {
           <p className="mt-5 text-sm leading-6 text-[var(--mat-muted)]">
             {progress.attempts > 0
               ? `You've recorded ${progress.attempts} ${progress.attempts === 1 ? "attempt" : "attempts"} so far. Keep going!`
-              : "Your progress will appear here as you complete scored practice attempts with Nina."}
+              : "Your progress will appear here as you complete practice attempts with Nina."}
           </p>
         </header>
 
@@ -164,7 +164,7 @@ export default async function ProgressPage() {
               </h2>
 
               <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
-                Each square reflects the number of scored attempts recorded on
+                Each square reflects the number of practice attempts recorded on
                 that day.
               </p>
             </div>
@@ -228,7 +228,7 @@ export default async function ProgressPage() {
                 viewBox={`0 0 ${w} ${h}`}
                 className="mt-4 h-auto w-full"
                 role="img"
-                aria-label="Clarity scores across your recent scored attempts"
+                aria-label="Clarity scores across your recent measured attempts"
               >
                 {[0, 25, 50, 75, 100].map((g) => (
                   <g key={g}>
@@ -278,7 +278,7 @@ export default async function ProgressPage() {
                 </p>
 
                 <p className="mt-2 text-sm leading-6 text-gray-500">
-                  Complete at least two scored practice attempts so we can show
+                  Complete at least two measured speech assessments so we can show
                   how your clarity changes over time.
                 </p>
               </div>
@@ -328,7 +328,7 @@ export default async function ProgressPage() {
             ) : (
               <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-[#f8fbfa] p-6">
                 <p className="font-semibold text-[#17223b]">
-                  Sound mastery starts with scored practice
+                  Sound mastery starts with measured practice
                 </p>
 
                 <p className="mt-2 text-sm leading-6 text-gray-500">
@@ -354,7 +354,7 @@ export default async function ProgressPage() {
                 </h2>
 
                 <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
-                  Scored recordings and average clarity across recent months.
+                  Practice recordings and measured average clarity across recent months.
                 </p>
               </div>
 
@@ -389,7 +389,7 @@ export default async function ProgressPage() {
               </div>
 
               <p className="mt-4 text-xs leading-5 text-[var(--mat-muted)]">
-                Bar height reflects the number of scored recordings. The number
+                Bar height reflects the number of practice recordings. The number
                 above each bar is average clarity.
               </p>
             </div>
@@ -405,7 +405,7 @@ export default async function ProgressPage() {
                 </h2>
 
                 <p className="mt-2 text-sm leading-6 text-[var(--mat-muted)]">
-                  Your newest scored practice attempts.
+                  Your newest measured practice attempts.
                 </p>
               </div>
 

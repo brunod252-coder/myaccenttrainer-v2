@@ -485,7 +485,7 @@ export default async function DashboardPage() {
 
           <span className="mt-1 block text-sm leading-6 text-white/75">
             {stats.attempts > 0
-              ? "See what Nina remembers about your voice, your strongest and weakest sounds, and what to practice next."
+              ? "See what Nina remembers about your practice and, once measured, the speech patterns that can guide what to work on next."
               : "Once you record, Nina starts building your personal speaking history and coaching context."}
           </span>
         </span>

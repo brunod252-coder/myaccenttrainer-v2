@@ -67,7 +67,7 @@ export default async function NinaPage() {
               </h1>
 
               <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)] sm:text-base">
-                Nina uses your scored speaking attempts to track patterns in
+                Nina uses your measured speaking attempts to track patterns in
                 your clarity, sounds, consistency, and progress over time.
               </p>
             </div>
@@ -94,7 +94,7 @@ export default async function NinaPage() {
           </h2>
 
           <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[var(--mat-muted)]">
-            Record your first scored practice attempt and Nina can begin
+            Complete your first measured speech assessment and Nina can begin
             identifying your clarity, sound patterns, progress, and useful
             areas to practice next.
           </p>
@@ -133,7 +133,7 @@ export default async function NinaPage() {
 
                 <Stat
                   value={`${brain.totalAttempts}`}
-                  label="Scored recordings"
+                  label="Practice recordings"
                 />
 
                 <Stat
@@ -151,7 +151,7 @@ export default async function NinaPage() {
                 </p>
 
                 <h2 className="mt-1 font-display text-2xl text-[var(--mat-ink)]">
-                  Your last scored attempt
+                  Your last measured attempt
                 </h2>
 
                 {brain.latest ? (
@@ -197,14 +197,14 @@ export default async function NinaPage() {
                         <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
                           {brain.comparison.delta > 0 ? "+" : ""}
                           {brain.comparison.delta} points compared with your
-                          previous {brain.latest.label} attempt, which scored{" "}
+                          previous {brain.latest.label} measured attempt, with a clarity of{" "}
                           {brain.comparison.previous}.
                         </p>
                       </div>
                     ) : (
                       <div className="mt-4 rounded-[var(--mat-radius-lg)] border border-[var(--mat-border)] bg-[var(--mat-surface-soft)] p-4">
                         <p className="text-sm font-semibold text-[var(--mat-ink)]">
-                          First scored attempt on this sound
+                          First measured attempt on this sound
                         </p>
 
                         <p className="mt-1 text-sm leading-6 text-[var(--mat-muted)]">
@@ -215,7 +215,7 @@ export default async function NinaPage() {
                   </div>
                 ) : (
                   <p className="mt-5 text-sm leading-6 text-[var(--mat-muted)]">
-                    Your latest scored attempt will appear here after you
+                    Your latest measured attempt will appear here after you
                     practice.
                   </p>
                 )}
@@ -265,7 +265,7 @@ export default async function NinaPage() {
                   </h2>
 
                   <p className="mt-3 text-sm leading-7 text-[var(--mat-muted)]">
-                    Keep practicing and Nina will use your scored attempts to
+                    Keep practicing and Nina will use your measured attempts to
                     identify a useful sound to focus on next.
                   </p>
 
@@ -293,7 +293,7 @@ export default async function NinaPage() {
                   </h2>
 
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
-                    Nina groups your scored attempts by practice sound to show
+                    Nina groups your measured attempts by practice sound to show
                     current averages and recent direction.
                   </p>
                 </div>
@@ -319,7 +319,7 @@ export default async function NinaPage() {
                           </p>
 
                           <p className="mt-1 text-xs text-[var(--mat-muted)]">
-                            {s.attempts} {s.attempts === 1 ? "scored attempt" : "scored attempts"}
+                            {s.attempts} {s.attempts === 1 ? "measured attempt" : "measured attempts"}
                           </p>
                         </div>
 
@@ -386,7 +386,7 @@ export default async function NinaPage() {
                           ? "mastered"
                           : "your highest current average"
                       }`
-                    : "More scored practice will establish this."
+                    : "More measured practice will establish this."
                 }
               />
 
@@ -399,7 +399,7 @@ export default async function NinaPage() {
                     ? `${brain.weakest.avg} average across ${brain.weakest.attempts} ${
                         brain.weakest.attempts === 1 ? "attempt" : "attempts"
                       }`
-                    : "More scored practice will establish this."
+                    : "More measured practice will establish this."
                 }
               />
 
@@ -409,7 +409,7 @@ export default async function NinaPage() {
                 value={brain.mostPracticed?.label ?? "—"}
                 detail={
                   brain.mostPracticed
-                    ? `${brain.mostPracticed.attempts} scored ${
+                    ? `${brain.mostPracticed.attempts} measured ${
                         brain.mostPracticed.attempts === 1
                           ? "attempt"
                           : "attempts"
@@ -449,7 +449,7 @@ export default async function NinaPage() {
                     </div>
                   ) : (
                     <p className="mt-4 text-sm leading-6 text-[var(--mat-muted)]">
-                      Nina will show improving sounds here when recent scored
+                      Nina will show improving sounds here when recent measured
                       attempts move above their earlier average.
                     </p>
                   )}
@@ -505,7 +505,7 @@ export default async function NinaPage() {
 
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
                     Replay your available stored practice recordings alongside
-                    the sound, date, and scored clarity attached to each take.
+                    the sound, date, and measured clarity attached to each take.
                   </p>
                 </div>
 
@@ -587,7 +587,7 @@ export default async function NinaPage() {
                   </h2>
 
                   <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--mat-muted)]">
-                    Nina tracks these milestones against your scored speaking
+                    Nina tracks these milestones against your speaking
                     history and marks them as they are reached.
                   </p>
                 </div>

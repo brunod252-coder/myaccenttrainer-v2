@@ -112,7 +112,7 @@ export async function getUserDetail(id: string): Promise<UserDetail | null> {
       (async () => {
         try {
           return (await db.pronunciationAttempt.findMany({
-            where: { userId: id }, orderBy: { createdAt: "desc" }, take: 5, select: { overall: true },
+            where: { userId: id, source: "azure" }, orderBy: { createdAt: "desc" }, take: 5, select: { overall: true },
           })) as { overall: number }[];
         } catch { return []; }
       })(),
@@ -247,7 +247,14 @@ export async function getLessonStats(): Promise<LessonStat[]> {
   try {
     rows = (await (prisma as unknown as {
       pronunciationAttempt: { findMany: (a: unknown) => Promise<{ lessonSlug: string | null; overall: number }[]> };
-    }).pronunciationAttempt.findMany({ take: 5000, select: { lessonSlug: true, overall: true } }));
+    }).pronunciationAttempt.findMany({
+      where: { source: "azure" },
+      take: 5000,
+      select: {
+        lessonSlug: true,
+        overall: true,
+      },
+    }));
   } catch {
     return [];
   }

@@ -6,7 +6,12 @@
 
 import { prisma } from "@/lib/prisma";
 
-type Row = { overall: number; focus: string | null; createdAt: Date };
+type Row = {
+  overall: number;
+  focus: string | null;
+  source: string;
+  createdAt: Date;
+};
 
 const FOCUS_LABELS: Record<string, string> = {
   r: "American R", l: "The L sound", th: "TH", v: "V and W", w: "V and W",
@@ -27,7 +32,11 @@ function db() {
 }
 
 export type CalendarDay = { date: string; count: number; level: 0 | 1 | 2 | 3 | 4 };
-export type MonthBucket = { label: string; attempts: number; avg: number };
+export type MonthBucket = {
+  label: string;
+  attempts: number;
+  avg: number | null;
+};
 export type TimelineItem = { date: string; label: string; overall: number };
 
 export type Analytics = {
@@ -64,7 +73,11 @@ export async function getAnalytics(userId: string): Promise<Analytics> {
   };
   if (!rows.length) return empty;
 
-  // ── per-day counts ──
+  const measured = rows.filter(
+    (r) => r.source === "azure",
+  );
+
+  // ── per-day counts: all practice activity ──
   const perDay = new Map<string, number>();
   for (const r of rows) {
     const key = ymd(new Date(r.createdAt));
@@ -84,23 +97,64 @@ export async function getAnalytics(userId: string): Promise<Analytics> {
     calendar.push({ date: key, count, level: levelFor(count) });
   }
 
-  // ── months: last 6 calendar months ──
-  const monthMap = new Map<string, { sum: number; n: number; label: string }>();
+  // ── months: activity count + measured clarity ──
+  const monthMap = new Map<
+    string,
+    {
+      attempts: number;
+      measuredSum: number;
+      measuredN: number;
+      label: string;
+    }
+  >();
+
   for (const r of rows) {
     const d = new Date(r.createdAt);
-    const key = `${d.getFullYear()}-${d.getMonth()}`;
-    const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-    const cur = monthMap.get(key) || { sum: 0, n: 0, label };
-    cur.sum += r.overall;
-    cur.n += 1;
-    monthMap.set(key, cur);
+    const key =
+      `${d.getFullYear()}-${d.getMonth()}`;
+
+    const label = d.toLocaleDateString(
+      "en-US",
+      {
+        month: "short",
+        year: "2-digit",
+      },
+    );
+
+    const current =
+      monthMap.get(key) || {
+        attempts: 0,
+        measuredSum: 0,
+        measuredN: 0,
+        label,
+      };
+
+    current.attempts += 1;
+
+    if (r.source === "azure") {
+      current.measuredSum += r.overall;
+      current.measuredN += 1;
+    }
+
+    monthMap.set(key, current);
   }
-  const months: MonthBucket[] = [...monthMap.values()]
-    .slice(-6)
-    .map((m) => ({ label: m.label, attempts: m.n, avg: Math.round(m.sum / m.n) }));
+
+  const months: MonthBucket[] =
+    [...monthMap.values()]
+      .slice(-6)
+      .map((month) => ({
+        label: month.label,
+        attempts: month.attempts,
+        avg: month.measuredN
+          ? Math.round(
+              month.measuredSum /
+                month.measuredN,
+            )
+          : null,
+      }));
 
   // ── timeline: most recent 8 ──
-  const timeline: TimelineItem[] = [...rows]
+  const timeline: TimelineItem[] = [...measured]
     .slice(-8)
     .reverse()
     .map((r) => ({
@@ -144,7 +198,16 @@ function buildEmptyCalendar(): CalendarDay[] {
 }
 
 // Rows for CSV export (raw attempts, newest first).
-export async function getAttemptRowsForExport(userId: string): Promise<{ date: string; sound: string; score: number }[]> {
+export async function getAttemptRowsForExport(
+  userId: string,
+): Promise<
+  {
+    date: string;
+    sound: string;
+    score: number | null;
+    source: string;
+  }[]
+> {
   try {
     const rows = await db().pronunciationAttempt.findMany({
       where: { userId },
@@ -154,7 +217,11 @@ export async function getAttemptRowsForExport(userId: string): Promise<{ date: s
     return rows.map((r) => ({
       date: new Date(r.createdAt).toISOString(),
       sound: labelFor(r.focus),
-      score: r.overall,
+      score:
+        r.source === "azure"
+          ? r.overall
+          : null,
+      source: r.source,
     }));
   } catch {
     return [];
