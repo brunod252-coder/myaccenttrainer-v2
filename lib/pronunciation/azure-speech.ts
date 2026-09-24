@@ -60,10 +60,47 @@ export async function assessWithAzure(
       recognizer.recognizeOnceAsync(
         (result) => {
           try {
-            const pa = sdk.PronunciationAssessmentResult.fromResult(result);
             const json = result.properties.getProperty(
               sdk.PropertyId.SpeechServiceResponse_JsonResult,
             );
+
+            const reasonName =
+              sdk.ResultReason[result.reason] ?? String(result.reason);
+
+            if (result.reason === sdk.ResultReason.Canceled) {
+              const cancellation =
+                sdk.CancellationDetails.fromResult(result);
+
+              reject(
+                new Error(
+                  "Azure recognition canceled: " +
+                    (cancellation.errorDetails || "unknown reason"),
+                ),
+              );
+              return;
+            }
+
+            if (result.reason !== sdk.ResultReason.RecognizedSpeech) {
+              reject(
+                new Error(
+                  "Azure recognition returned " + reasonName,
+                ),
+              );
+              return;
+            }
+
+            if (!json) {
+              reject(
+                new Error(
+                  "Azure recognized speech but returned no detailed JSON result",
+                ),
+              );
+              return;
+            }
+
+            const pa =
+              sdk.PronunciationAssessmentResult.fromResult(result);
+
             resolve({ pa, json });
           } catch (e) {
             reject(e);
