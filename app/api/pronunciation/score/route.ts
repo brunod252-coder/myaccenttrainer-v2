@@ -26,37 +26,59 @@ async function currentUserId(): Promise<string | null> {
 // AZURE_SPEECH_KEY + AZURE_SPEECH_REGION are set and the SDK is installed.
 export async function POST(req: Request) {
   try {
+    const userId = await currentUserId();
+
+    if (!userId) {
+      return NextResponse.json(
+        { message: "Authentication required." },
+        { status: 401 },
+      );
+    }
+
     const form = await req.formData();
     const referenceText = String(form.get("referenceText") ?? "");
     const focus = String(form.get("focus") ?? "");
     const lessonSlug = String(form.get("lessonSlug") ?? "") || undefined;
     const audio = form.get("audio");
 
-    let result: PronunciationResult | null = null;
+    let result: PronunciationResult;
 
-    // ── Real Azure scoring (auto-enabled when configured) ────────────
-    if (
-      audio instanceof File &&
-      process.env.AZURE_SPEECH_KEY &&
-      process.env.AZURE_SPEECH_REGION
-    ) {
+    // A submitted recording is a measurement request. Once audio exists,
+    // never replace a failed real measurement with a synthetic estimate.
+    if (audio instanceof File) {
+      if (
+        !process.env.AZURE_SPEECH_KEY ||
+        !process.env.AZURE_SPEECH_REGION
+      ) {
+        return NextResponse.json(
+          {
+            message:
+              "Measured pronunciation feedback is temporarily unavailable. Please try again later.",
+          },
+          { status: 503 },
+        );
+      }
+
       try {
         const { assessWithAzure } = await import("@/lib/pronunciation/azure-speech");
         const buf = Buffer.from(await audio.arrayBuffer());
         result = await assessWithAzure(buf, referenceText, focus);
       } catch (error) {
         console.error("AZURE_SCORE_ERROR", error);
-        // fall through to the practice estimate
+        return NextResponse.json(
+          {
+            message:
+              "We couldn't measure that recording just now. Please try again.",
+          },
+          { status: 502 },
+        );
       }
-    }
-
-    if (!result) {
+    } else {
+      // Explicit no-audio requests retain the non-measured practice estimate.
       result = scorePronunciationMock(referenceText, focus);
     }
 
-    const userId = await currentUserId();
-    if (userId) {
-      const previous = await getPreviousAttemptScore(userId, focus);
+    const previous = await getPreviousAttemptScore(userId, focus);
       if (previous !== null) {
         const delta = result.overall - previous;
         result.comparison = {
@@ -83,7 +105,6 @@ export async function POST(req: Request) {
           // storing the audio is best-effort — never block scoring
         }
       }
-    }
 
     return NextResponse.json(result);
   } catch (error) {

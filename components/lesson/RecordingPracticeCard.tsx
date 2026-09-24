@@ -71,7 +71,10 @@ export default function RecordingPracticeCard({
         if (recorderRef.current) stopRecording();
       }, 8000);
     } catch {
-      await score(null);
+      setStatus("error");
+      setErrorMessage(
+        "I couldn't access your microphone. Please allow microphone access and try again.",
+      );
     }
   }
 

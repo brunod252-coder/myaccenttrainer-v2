@@ -1,20 +1,12 @@
 // @ts-nocheck
-// ^ This opt-in module imports "microsoft-cognitiveservices-speech-sdk", which
-// is NOT installed until you enable Azure (see docs/PRONUNCIATION.md). @ts-nocheck
-// keeps `next build` green until then. After you run
-// `npm install microsoft-cognitiveservices-speech-sdk`, delete this line for
-// full type-checking.
+// Azure Pronunciation Assessment provider. The SDK is installed and this
+// module is loaded dynamically by the pronunciation score route when a real
+// recording is submitted and Azure Speech credentials are configured.
+//
+// @ts-nocheck remains temporarily until the provider is normalized against
+// the installed SDK's TypeScript surface.
 
-// ── Azure Pronunciation Assessment (server-only, opt-in) ─────────────
-// Real speech scoring via Azure AI Speech. NOT imported anywhere by
-// default, so the app builds and runs without the SDK installed.
-//
-// To enable real scoring:
-//   1. npm install microsoft-cognitiveservices-speech-sdk
-//   2. Add to .env:  AZURE_SPEECH_KEY="..."  AZURE_SPEECH_REGION="eastus"
-//   3. Uncomment the marked block in app/api/pronunciation/score/route.ts
-//
-// See docs/PRONUNCIATION.md for the full walkthrough.
+// ── Azure Pronunciation Assessment (server-only) ─────────────────────
 
 import type { PronunciationResult, PhonemeScore } from "./types";
 import { buildNinaFeedback } from "./mock-scorer";
